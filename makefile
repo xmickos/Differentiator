@@ -1,5 +1,10 @@
+all: build
+	./Executables/Differentiator
+
+src_list = ./src/differentiator_funcs.cpp ./src/RD_funcs.cpp ./src/Differentiator.cpp
+
 build:
-	g++ -D _DEBUG -ggdb3 -std=c++17 -O0 -Wall -Wextra -Weffc++ -Wc++14-compat -Wmissing-declarations								\
+	g++ -D _DEBUG=1 -ggdb3 -std=c++17 -O0 -Wall -Wextra -Weffc++ -Wc++14-compat -Wmissing-declarations								\
 	-Wcast-qual -Wchar-subscripts -Wconversion -Wctor-dtor-privacy -Wempty-body									                    \
 	-Wfloat-equal -Wformat-nonliteral -Wformat-security -Wformat=2 -Winline -Wnon-virtual-dtor						                \
 	-Wopenmp -Woverloaded-virtual -Wpacked -Wpointer-arith -Winit-self -Wredundant-decls -Wshadow -Wsign-conversion				    \
@@ -9,10 +14,8 @@ build:
 	-Wno-varargs -Wstack-protector -fcheck-new -fsized-deallocation -fstack-protector -fstrict-overflow 						    \
 	-fno-omit-frame-pointer -Wlarger-than=8192 -Wframe-larger-than=8192 -fPIE													    \
 	-fsanitize=address,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,				            \
-	Differentiator.cpp differentiator_funcs.cpp RD_funcs.cpp -o Differentiator -fsanitize=address
-all: build
-	./Differentiator
+	-I include $(src_list) -o ./Executables/Differentiator -fsanitize=address
 launch:
-	./Differentiator
+	./Executables/Differentiator
 dot:
-	dot dotfile.dot -Tpng -O
+	dot dotfile.dot -Tpng -O ./Pics/
