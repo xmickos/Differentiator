@@ -1,0 +1,11 @@
+digraph D {
+
+  A [shape=diamond, label = "bububu"]
+  B [shape=box, label = "bebebe"]
+  C [shape=circle, label = "bababa"]
+
+  A -> B [style=dashed, color=grey]
+  A -> C [color="black:invis:black"]
+  A -> D [penwidth=5, arrowhead=none]
+
+}
