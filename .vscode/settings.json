@@ -16,6 +16,9 @@
         "ostream": "cpp",
         "sstream": "cpp",
         "type_traits": "cpp",
-        "complex": "cpp"
+        "complex": "cpp",
+        "__node_handle": "cpp",
+        "memory": "cpp",
+        "cassert": "cpp"
     }
 }

@@ -1,5 +1,5 @@
-#include "RD_header.hpp"
 #include "differ_header.h"
+#include "RD_header.hpp"
 
 
 int p = 0;
@@ -38,17 +38,17 @@ V  итерация: умножение и деление со скобками
 */
 
 
-double GetG(const char* str, FILE* logfile){
-    VERIFY_LOGFILE(logfile);
+Node* GetG(const char* str, FILE* logfile){
+    VERIFICATION_LOGFILE(logfile, nullptr);
 
     s = str;
     p = 0;
 
     DEBUG_CALL(GetE, logfile);
-    double val = GetE(logfile);
+    Node* node = GetE(logfile);
 
     if(s[p] == '\0'){
-        return val;
+        return node;
     }
 
     DEBUG_CALL(syntax_error, logfile);
@@ -63,7 +63,7 @@ Node* GetE(FILE* logfile){
     double val2 = 0;
     int op = 0;
     Node* node_left = GetT(logfile);
-    Node* node = nullptr, node_right = nullptr, head_node = nullptr;
+    Node* node = nullptr, *node_right = nullptr, *head_node = nullptr;
 
     while(s[p] == SUMM || s[p] == SUBTRACTION){
         DEBUG_ECHO(logfile);
@@ -96,14 +96,19 @@ Node* GetE(FILE* logfile){
     return node;
 }
 
+/*
 Node* GetT(FILE* logfile){
     DEBUG_ECHO(logfile);
 
-    DEBUG_CALL(GetP, logfile);
-    double val = GetP(logfile), val2 = 0;
     int op = 0;
-    Node* node_left = OpNew(VALUE, val, logfile);
-    Node* node_right = nullptr, node = nullptr;
+
+    // Node *node = GetP(logfile);
+    // Node* node_left = OpNew(VALUE, /*val , logfile);
+
+    DEBUG_CALL(GetP, logfile);
+    Node *node_left = GetP(logfile);
+
+    Node *node_right = nullptr, *node = nullptr, *val2 = nullptr;
 
     while(s[p] == MULTIPLICATION || s[p] == DIVISION){
         DEBUG_ECHO(logfile);
@@ -112,29 +117,76 @@ Node* GetT(FILE* logfile){
         p++;
 
         DEBUG_CALL(GetP, logfile);
-        val2 = GetP(logfile);
+        node_right = GetP(logfile);
 
-        node_right = OpNew(VALUE, val2, logfile);
         node = OpNew(OP, op, logfile);
 
-        switch(op){
-            case '*':
-                val = val * val2;
-                break;
-            case '/':
-                val = val / val2;
-                break;
-            default:
-                DEBUG_CALL(syntax_error, logfile);
-                syntax_error(logfile);
-        }
+        if(s[p] ==
+
+        node->left  = node_left;
+        node->right = node_right;
+
+        // switch(op){
+        //     case '*':
+        //         val = val * val2;
+        //         break;
+        //     case '/':
+        //         val = val / val2;
+        //         break;
+        //     default:
+        //         DEBUG_CALL(syntax_error, logfile);
+        //         syntax_error(logfile);
+        // }
     }
 
-    node->left  = node_left;
-    node->right = node_right;
+
+    return node;
+} */
+
+Node* GetT(FILE* logfile){
+    DEBUG_ECHO(logfile);
+
+    DEBUG_CALL(GetP, logfile);
+    Node *node_left = GetP(logfile);
+    Node* node = nullptr;
+
+    if(s[p] == MULTIPLICATION || s[p] == DIVISION){
+
+        DEBUG_CALL(PartialGetT, logfile);
+        node = PartialGetT(logfile);
+
+    }
+
+    node->left = node_left;
 
     return node;
 }
+
+Node* PartialGetT(FILE* logfile){
+    DEBUG_ECHO(logfile);
+
+    Node *subroot = OpNew(OP, s[p], logfile);
+
+    p++;
+
+    DEBUG_CALL(GetP, logfile);
+    Node *node_right = GetP(logfile);
+    Node *subsubroot = nullptr;
+
+    if(s[p] == MULTIPLICATION || s[p] == DIVISION){
+
+        subsubroot = PartialGetT(logfile);
+
+        subroot->right = subsubroot;
+        subsubroot->left = node_right;
+    }else{
+        subroot->right = node_right;
+    }
+
+    return subroot;
+}
+
+
 
 Node* GetP(FILE* logfile){
     DEBUG_ECHO(logfile);
@@ -144,9 +196,11 @@ Node* GetP(FILE* logfile){
 
     if(s[p] == '('){
         p++;
+        DEBUG_CALL(GetE, logfile);
         node = GetE(logfile);
         VERIFICATION(node == nullptr, "GetE failed!", logfile, nullptr);
     }else{
+        DEBUG_CALL(GetN, logfile);
         return GetN(logfile);
     }
     if(s[p] == ')'){
@@ -187,13 +241,13 @@ Node* GetN(FILE* logfile){
         }
     }
 
-    Node* node = OpNew(VALUE, d_val, logfile);
-    VERIFICATION(node == nullptr, "OpNew failed!", logfile, nullptr);
+    Node* node = OpNew(VALUE, d_val, logfile);          // Любое число - всегда лист дерева - никакой привязки вниз быть
+    VERIFICATION(node == nullptr, "OpNew failed!", logfile, nullptr);                                        // не может.
 
     return node;
 }
 
-int syntax_error(FILE* logfile){
+Node* syntax_error(FILE* logfile){
     VERIFY_LOGFILE(logfile);
 
     printf("\033[1;31mSyntax error\033[0m at p = %d: %s\n", p, s + p);
@@ -201,5 +255,5 @@ int syntax_error(FILE* logfile){
 
     exit(-1);       // ?..
 
-    return 0;
+    return nullptr;
 }

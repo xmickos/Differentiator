@@ -3,8 +3,6 @@
 
 #define DEFAULT_SIZE 128
 
-#define VERIFY_LOGFILE(logfile) do{ if(logfile == nullptr){ printf("\033[1;31mWe've lost logfile!\033[0m\n "); return -1;}} while(0)
-
 #define DEBUG_ECHO(logfile) do{ fprintf(logfile, "I am %s, p = %d, next symbols is %c\n", __FUNCTION__, p, s[p]); }while(0)
 #define DEBUG_CALL(next_func, logfile) do{ fprintf(logfile, "I am %s, calling " #next_func "\n", __FUNCTION__);}while(0)
 
@@ -14,17 +12,17 @@ struct Lexema{
     char name[128] = {};
 };
 
-int syntax_error(FILE* logfile);
+Node* syntax_error(FILE* logfile);
 
-double GetG(const char* str, FILE* logfile);
+Node* GetG(const char* str, FILE* logfile);
 
-double GetE(FILE* logfile);
+Node* GetE(FILE* logfile);
 
-double GetT(FILE* logfile);
+Node* GetT(FILE* logfile);
 
-double GetP(FILE* logfile);
+Node* GetP(FILE* logfile);
 
-double GetN(FILE* logfile);
+Node* GetN(FILE* logfile);
 
 inline double d_pow(double d, int k){
 
