@@ -11,7 +11,7 @@ int RootCtor(Root* root, FILE* logfile){
     return 0;
 }
 
-Node* OpNew(unsigned int data_flag, int value, FILE* logfile){
+Node* OpNew(unsigned int data_flag, double value, FILE* logfile){
 
     /*
         Я не придумал ничего лучше, чем сделать тип value int'ом, чтобы оно могло спокойно конвертироваться и в double,
@@ -25,13 +25,16 @@ Node* OpNew(unsigned int data_flag, int value, FILE* logfile){
     node->right = nullptr;
 
     if(data_flag == VALUE){
-        node->data.type  = NONE;
-        node->data.value = (double)value;
+        // node->data.type  = NONE;
+        node->data.value = value;
         node->data_flag  = VALUE;
     }else{
+        fprintf(logfile, "ASSIGNED: %c == %f\n", (char)value, value);
         node->data.type = (char)value;
-     /* node->data_flag = OP; */
+        node->data_flag = OP;
     }
+
+    fprintf(logfile, "[%s] Created node with data.type = %d == %c, data.value = %f\n", __FUNCTION__, node->data.type, node->data.type, node->data.value);
 
     return node;
 }
@@ -71,7 +74,7 @@ int OpPartialGraphDump(Node* node, FILE* dotfile, unsigned char ip, unsigned cha
             fprintf(dotfile, GRAPHVIZ_MKNODE_OP("%d/%d", "%c"), ip, new_depth, node->left->data.type);
         }else{
             fprintf(logfile, "Created VALUE node with name \"%d/%d\" and value %f, connected it to ", ip, new_depth, node->left->data.value);
-            fprintf(dotfile, GRAPHVIZ_MKNODE_VALUE("%d/%d", "%.2f"), ip, new_depth, node->left->data.value);
+            fprintf(dotfile, GRAPHVIZ_MKNODE_VALUE("%d/%d", "%.4f"), ip, new_depth, node->left->data.value);
         }
 
         fprintf(dotfile, GRAPHVIZ_CONNECT_NODE("\"%d/%d\"", "\"%d/%d\""), ip, depth, ip, new_depth);
@@ -86,7 +89,7 @@ int OpPartialGraphDump(Node* node, FILE* dotfile, unsigned char ip, unsigned cha
             fprintf(dotfile, GRAPHVIZ_MKNODE_OP("%d/%d", "%c"), new_ip, new_depth, node->right->data.type);
         }
         else{
-            fprintf(dotfile, GRAPHVIZ_MKNODE_VALUE("%d/%d", "%.2f"), new_ip, new_depth, node->right->data.value);
+            fprintf(dotfile, GRAPHVIZ_MKNODE_VALUE("%d/%d", "%.4f"), new_ip, new_depth, node->right->data.value);
         }
 
         fprintf(dotfile, GRAPHVIZ_CONNECT_NODE("\"%d/%d\"", "\"%d/%d\""), ip, depth, new_ip, new_depth);
@@ -149,12 +152,14 @@ double OpPartialEval(Node* node, FILE* logfile){
         #ifdef DEBUG
             fprintf(logfile, "Current node is: nullptr\n");
         #endif
-        return 0;
+        return 0.;
     }
 
     double tmp = 0.;
 
-    if(node->data.type != NONE){
+    if(!node->data_flag){
+
+        fprintf(logfile, "[%s, %d] Curr node: data.type = %d == %c, data.value = %f\n", __FUNCTION__, __LINE__, node->data.type, node->data.type, node->data.value);
 
         switch(node->data.type){
             case SUMM:
@@ -168,7 +173,8 @@ double OpPartialEval(Node* node, FILE* logfile){
                 VERIFICATION(IsEqual(tmp, 0), "Division by zero!", logfile, -1);
                 return OpPartialEval(node->left, logfile) / tmp;
             default:
-                VERIFICATION(1, "Bad node type.", logfile, -1);
+                fprintf(logfile, "node.type is %d == %c\n", node->data.type, node->data.type);
+                VERIFICATION(true, "Bad node type.", logfile, -1.);
         }
     }else{
         return node->data.value;

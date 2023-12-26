@@ -1,102 +1,234 @@
-Created OP node with name "0/1" and op -, connected it to node "0/0" with type: /
-Created VALUE node with name "0/2" and value 2000.000000, connected it to node "0/1" with type: -
-Created VALUE node with name "128/2" and value 3.000000, connected it to node "128/1" with type: +
-	/
-	left:	
-		-
-		left:	
-			2000.000000
-			left:	
-			right:	
-		right:	
-			1000.000000
-			left:	
-			right:	
-	right:	
-		+
-		left:	
-			3.000000
-			left:	
-			right:	
-		right:	
-			4.000000
-			left:	
-			right:	
-(((2000.00)-(1000.00))/((3.00)+(4.00)))I am GetG, calling GetE
+I am GetG, calling GetE
 I am GetE, p = 0, next symbols is (
 I am GetE, calling GetT
 I am GetT, p = 0, next symbols is (
 I am GetT, calling GetP
 I am GetP, p = 0, next symbols is (
-I am GetE, p = 1, next symbols is (
+I am GetP, calling GetE
+I am GetE, p = 1, next symbols is 0
 I am GetE, calling GetT
-I am GetT, p = 1, next symbols is (
+I am GetT, p = 1, next symbols is 0
 I am GetT, calling GetP
-I am GetP, p = 1, next symbols is (
-I am GetE, p = 2, next symbols is (
+I am GetP, p = 1, next symbols is 0
+I am GetP, calling GetN
+I am GetN, p = 1, next symbols is 0
+I am GetN, p = 2, next symbols is .
+curr d_val before evaluating fractional part: 0.000000
+I am GetN, p = 3, next symbols is 5
+[GetN, 254]: s[p] - '0' == 5
+current d_val is 0.500000
+I am GetN, p = 4, next symbols is 7
+[GetN, 254]: s[p] - '0' == 7
+current d_val is 0.570000
+I am GetN, p = 5, next symbols is 8
+[GetN, 254]: s[p] - '0' == 8
+current d_val is 0.578000
+[OpNew] Created node with data.type = -26 == æ, data.value = 0.578000
+I am GetN, successfully created node with val = 0.578000
+I am GetP, got from GetN node with val = 0.578000
+I am GetE, calling PartialGetE
+I am PartialGetE, p = 6, next symbols is +
+ASSIGNED: + == 43.000000
+[OpNew] Created node with data.type = 43 == +, data.value = 0.000000
+I am PartialGetE, calling GetT
+I am GetT, p = 7, next symbols is 0
+I am GetT, calling GetP
+I am GetP, p = 7, next symbols is 0
+I am GetP, calling GetN
+I am GetN, p = 7, next symbols is 0
+I am GetN, p = 8, next symbols is .
+curr d_val before evaluating fractional part: 0.000000
+I am GetN, p = 9, next symbols is 1
+[GetN, 254]: s[p] - '0' == 1
+current d_val is 0.100000
+I am GetN, p = 10, next symbols is 7
+[GetN, 254]: s[p] - '0' == 7
+current d_val is 0.170000
+I am GetN, p = 11, next symbols is 2
+[GetN, 254]: s[p] - '0' == 2
+current d_val is 0.172000
+[OpNew] Created node with data.type = 107 == k, data.value = 0.172000
+I am GetN, successfully created node with val = 0.172000
+I am GetP, got from GetN node with val = 0.172000
+I am GetP, got from GetN node with val = 0.000000
+I am GetT, calling PartialGetT
+I am PartialGetT, p = 13, next symbols is *
+ASSIGNED: * == 42.000000
+[OpNew] Created node with data.type = 42 == *, data.value = 0.000000
+I am PartialGetT, calling GetP
+I am GetP, p = 14, next symbols is (
+I am GetP, calling GetE
+I am GetE, p = 15, next symbols is 0
 I am GetE, calling GetT
-I am GetT, p = 2, next symbols is (
+I am GetT, p = 15, next symbols is 0
 I am GetT, calling GetP
-I am GetP, p = 2, next symbols is (
-I am GetE, p = 3, next symbols is 2
-I am GetE, calling GetT
-I am GetT, p = 3, next symbols is 2
-I am GetT, calling GetP
-I am GetP, p = 3, next symbols is 2
-I am GetN, p = 3, next symbols is 2
-I am GetN, p = 7, next symbols is .
-I am GetN, p = 8, next symbols is 0
-current d_val is 2000.000000
-I am GetN, p = 9, next symbols is 0
-current d_val is 2000.000000
-I am GetE, p = 11, next symbols is -
-I am GetE, calling GetT
-I am GetT, p = 12, next symbols is (
-I am GetT, calling GetP
-I am GetP, p = 12, next symbols is (
-I am GetE, p = 13, next symbols is 1
-I am GetE, calling GetT
-I am GetT, p = 13, next symbols is 1
-I am GetT, calling GetP
-I am GetP, p = 13, next symbols is 1
-I am GetN, p = 13, next symbols is 1
-I am GetN, p = 17, next symbols is .
+I am GetP, p = 15, next symbols is 0
+I am GetP, calling GetN
+I am GetN, p = 15, next symbols is 0
+I am GetN, p = 16, next symbols is .
+curr d_val before evaluating fractional part: 0.000000
+I am GetN, p = 17, next symbols is 8
+[GetN, 254]: s[p] - '0' == 8
+current d_val is 0.800000
 I am GetN, p = 18, next symbols is 2
-current d_val is 1008.200000
-I am GetN, p = 19, next symbols is 5
-current d_val is 1008.250000
-I am GetT, p = 22, next symbols is /
+[GetN, 254]: s[p] - '0' == 2
+current d_val is 0.820000
+I am GetN, p = 19, next symbols is 3
+[GetN, 254]: s[p] - '0' == 3
+current d_val is 0.823000
+[OpNew] Created node with data.type = -67 == ½, data.value = 0.823000
+I am GetN, successfully created node with val = 0.823000
+I am GetP, got from GetN node with val = 0.823000
+I am GetE, calling PartialGetE
+I am PartialGetE, p = 20, next symbols is +
+ASSIGNED: + == 43.000000
+[OpNew] Created node with data.type = 43 == +, data.value = 0.000000
+I am PartialGetE, calling GetT
+I am GetT, p = 21, next symbols is 0
 I am GetT, calling GetP
-I am GetP, p = 23, next symbols is (
-I am GetE, p = 24, next symbols is (
+I am GetP, p = 21, next symbols is 0
+I am GetP, calling GetN
+I am GetN, p = 21, next symbols is 0
+I am GetN, p = 22, next symbols is .
+curr d_val before evaluating fractional part: 0.000000
+I am GetN, p = 23, next symbols is 1
+[GetN, 254]: s[p] - '0' == 1
+current d_val is 0.100000
+I am GetN, p = 24, next symbols is 1
+[GetN, 254]: s[p] - '0' == 1
+current d_val is 0.110000
+I am GetN, p = 25, next symbols is 7
+[GetN, 254]: s[p] - '0' == 7
+current d_val is 0.117000
+[OpNew] Created node with data.type = -63 == Á, data.value = 0.117000
+I am GetN, successfully created node with val = 0.117000
+I am GetP, got from GetN node with val = 0.117000
+I am GetP, got from GetN node with val = 0.000000
+I am GetE, calling PartialGetE
+I am PartialGetE, p = 27, next symbols is -
+ASSIGNED: - == 45.000000
+[OpNew] Created node with data.type = 45 == -, data.value = 0.000000
+I am PartialGetE, calling GetT
+I am GetT, p = 28, next symbols is 1
+I am GetT, calling GetP
+I am GetP, p = 28, next symbols is 1
+I am GetP, calling GetN
+I am GetN, p = 28, next symbols is 1
+I am GetN, p = 29, next symbols is .
+curr d_val before evaluating fractional part: 1.000000
+I am GetN, p = 30, next symbols is 7
+[GetN, 254]: s[p] - '0' == 7
+current d_val is 1.700000
+I am GetN, p = 31, next symbols is 1
+[GetN, 254]: s[p] - '0' == 1
+current d_val is 1.710000
+I am GetN, p = 32, next symbols is 1
+[GetN, 254]: s[p] - '0' == 1
+current d_val is 1.711000
+[OpNew] Created node with data.type = -58 == Æ, data.value = 1.711000
+I am GetN, successfully created node with val = 1.711000
+I am GetP, got from GetN node with val = 1.711000
+I am GetT, calling PartialGetT
+I am PartialGetT, p = 33, next symbols is /
+ASSIGNED: / == 47.000000
+[OpNew] Created node with data.type = 47 == /, data.value = 0.000000
+I am PartialGetT, calling GetP
+I am GetP, p = 34, next symbols is (
+I am GetP, calling GetE
+I am GetE, p = 35, next symbols is 4
 I am GetE, calling GetT
-I am GetT, p = 24, next symbols is (
+I am GetT, p = 35, next symbols is 4
 I am GetT, calling GetP
-I am GetP, p = 24, next symbols is (
-I am GetE, p = 25, next symbols is 3
-I am GetE, calling GetT
-I am GetT, p = 25, next symbols is 3
+I am GetP, p = 35, next symbols is 4
+I am GetP, calling GetN
+I am GetN, p = 35, next symbols is 4
+I am GetN, p = 36, next symbols is .
+curr d_val before evaluating fractional part: 4.000000
+I am GetN, p = 37, next symbols is 4
+[GetN, 254]: s[p] - '0' == 4
+current d_val is 4.400000
+I am GetN, p = 38, next symbols is 1
+[GetN, 254]: s[p] - '0' == 1
+current d_val is 4.410000
+I am GetN, p = 39, next symbols is 8
+[GetN, 254]: s[p] - '0' == 8
+current d_val is 4.418000
+[OpNew] Created node with data.type = 121 == y, data.value = 4.418000
+I am GetN, successfully created node with val = 4.418000
+I am GetP, got from GetN node with val = 4.418000
+I am GetE, calling PartialGetE
+I am PartialGetE, p = 40, next symbols is +
+ASSIGNED: + == 43.000000
+[OpNew] Created node with data.type = 43 == +, data.value = 0.000000
+I am PartialGetE, calling GetT
+I am GetT, p = 41, next symbols is 1
 I am GetT, calling GetP
-I am GetP, p = 25, next symbols is 3
-I am GetN, p = 25, next symbols is 3
-I am GetN, p = 26, next symbols is .
-I am GetN, p = 27, next symbols is 0
-current d_val is 3.000000
-I am GetN, p = 28, next symbols is 0
-current d_val is 3.000000
-I am GetE, p = 30, next symbols is +
-I am GetE, calling GetT
-I am GetT, p = 31, next symbols is (
-I am GetT, calling GetP
-I am GetP, p = 31, next symbols is (
-I am GetE, p = 32, next symbols is 4
-I am GetE, calling GetT
-I am GetT, p = 32, next symbols is 4
-I am GetT, calling GetP
-I am GetP, p = 32, next symbols is 4
-I am GetN, p = 32, next symbols is 4
-I am GetN, p = 33, next symbols is .
-I am GetN, p = 34, next symbols is 0
-current d_val is 4.000000
-I am GetN, p = 35, next symbols is 0
-current d_val is 4.000000
+I am GetP, p = 41, next symbols is 1
+I am GetP, calling GetN
+I am GetN, p = 41, next symbols is 1
+I am GetN, p = 42, next symbols is .
+curr d_val before evaluating fractional part: 1.000000
+I am GetN, p = 43, next symbols is 3
+[GetN, 254]: s[p] - '0' == 3
+current d_val is 1.300000
+I am GetN, p = 44, next symbols is 8
+[GetN, 254]: s[p] - '0' == 8
+current d_val is 1.380000
+I am GetN, p = 45, next symbols is 2
+[GetN, 254]: s[p] - '0' == 2
+current d_val is 1.382000
+[OpNew] Created node with data.type = -22 == ê, data.value = 1.382000
+I am GetN, successfully created node with val = 1.382000
+I am GetP, got from GetN node with val = 1.382000
+I am GetP, got from GetN node with val = 0.000000
+	-
+	left:	
+		*
+		left:	
+			+
+			left:	
+				0.578000
+				left:	
+				right:	
+			right:	
+				0.172000
+				left:	
+				right:	
+		right:	
+			+
+			left:	
+				0.823000
+				left:	
+				right:	
+			right:	
+				0.117000
+				left:	
+				right:	
+	right:	
+		/
+		left:	
+			1.711000
+			left:	
+			right:	
+		right:	
+			+
+			left:	
+				4.418000
+				left:	
+				right:	
+			right:	
+				1.382000
+				left:	
+				right:	
+Created OP node with name "0/1" and op *, connected it to node "0/0" with type: -
+Created OP node with name "0/2" and op +, connected it to node "0/1" with type: *
+Created VALUE node with name "0/3" and value 0.578000, connected it to node "0/2" with type: +
+Created VALUE node with name "64/3" and value 0.823000, connected it to node "64/2" with type: +
+Created VALUE node with name "128/2" and value 1.711000, connected it to node "128/1" with type: /
+Created VALUE node with name "192/3" and value 4.418000, connected it to node "192/2" with type: +
+[OpPartialEval, 162] Curr node: data.type = 45 == -, data.value = 0.000000
+[OpPartialEval, 162] Curr node: data.type = 42 == *, data.value = 0.000000
+[OpPartialEval, 162] Curr node: data.type = 43 == +, data.value = 0.000000
+[OpPartialEval, 162] Curr node: data.type = 43 == +, data.value = 0.000000
+[OpPartialEval, 162] Curr node: data.type = 47 == /, data.value = 0.000000
+[OpPartialEval, 162] Curr node: data.type = 43 == +, data.value = 0.000000

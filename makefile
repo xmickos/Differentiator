@@ -18,4 +18,4 @@ build:
 launch:
 	./Executables/Differentiator
 dot:
-	dot dotfile.dot -Tpng -O ./Pics/
+	dot ./dots/dotfile.dot -Tpng -O ./Pics/

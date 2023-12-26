@@ -17,16 +17,6 @@ union NodeData{
     char type;
 };
 
-/*
-
-    Если нужно закодировать и double и type в одну область памяти, то видимо
-    следует оставить валидными только положительные double, а первый знаковый бит
-    использовать в качестве флага о том, записано ли в эти 8 байт значение узла или его тип
-    В качестве способа использования отрицательных чисел можно написать узел унарного минуса,
-    либо просто пользоваться вычитанием, хотя первое и не вполне удобно.
-
-*/
-
 enum types{
 
     SUMM            = '+',
@@ -56,7 +46,7 @@ struct Root{
 #define ECHO(logfile) fprintf(logfile, "[%s, %d]\n", __FUNCTION__, __LINE__);                                          \
     printf("[%s, %d]\n", __FUNCTION__, __LINE__);
 
-#define VERIFICATION(condition, message, logfile, ret_val)     if(condition){                                         \
+#define VERIFICATION(condition, message, logfile, ret_val)     if(condition){                                          \
         fprintf(logfile, "[%s, %d]Error:\t" message "\nExiting...\n", __FUNCTION__, __LINE__);                         \
         return ret_val;                                                                                                \
     }
@@ -80,7 +70,7 @@ edge [ ];\n\n"
 
 int RootCtor(Root* root, FILE* logfile);
 
-Node* OpNew(unsigned int data_flag, int value, FILE* logfile);
+Node* OpNew(unsigned int data_flag, double value, FILE* logfile);
 
 int OpPartialGraphDump(Node* node, FILE* dotfile, unsigned char ip, unsigned char depth, FILE* logfile);
 

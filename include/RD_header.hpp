@@ -12,6 +12,9 @@ struct Lexema{
     char name[128] = {};
 };
 
+typedef struct page_t * (*slow_getpage_t)();
+
+
 Node* syntax_error(FILE* logfile);
 
 Node* GetG(const char* str, FILE* logfile);
@@ -24,14 +27,22 @@ Node* GetP(FILE* logfile);
 
 Node* GetN(FILE* logfile);
 
+Node* PartialGetE(FILE* logfile);
+
+Node* PartialGetT(FILE* logfile);
+
 inline double d_pow(double d, int k){
 
-    while(k > 0){
-        d = d * d;
+    if(k == 0) return 1.;
+    if(k == 1) return d;
+
+    double val = d;
+    while(k > 1){
+        val = val * d;
         k--;
     }
 
-    return d;
+    return val;
 }
 
 
