@@ -12,8 +12,6 @@ struct Lexema{
     char name[128] = {};
 };
 
-typedef struct page_t * (*slow_getpage_t)();
-
 
 Node* syntax_error(FILE* logfile);
 

@@ -13,28 +13,34 @@ int RootCtor(Root* root, FILE* logfile){
 
 Node* OpNew(unsigned int data_flag, double value, FILE* logfile){
 
-    /*
-        Я не придумал ничего лучше, чем сделать тип value int'ом, чтобы оно могло спокойно конвертироваться и в double,
-        и в char в обоих случаях.
-    */
-
     Node* node = (Node*)calloc(1, sizeof(Node));
     VERIFICATION(node == nullptr, "Calloc for root->init_node failed!", logfile, nullptr);
 
     node->left  = nullptr;
     node->right = nullptr;
 
-    if(data_flag == VALUE){
-        // node->data.type  = NONE;
-        node->data.value = value;
-        node->data_flag  = VALUE;
-    }else{
-        fprintf(logfile, "ASSIGNED: %c == %f\n", (char)value, value);
-        node->data.type = (char)value;
-        node->data_flag = OP;
+    switch(data_flag){
+        case VALUE:
+            node->data.value = value;
+            node->data_flag  = VALUE;
+            break;
+        case OP:
+            node->data.type = (char)value;
+            node->data_flag = OP;
+            break;
+        case VAR:
+            node->data_flag = VAR;
+            node->data.type = 0;
+            node->data.value = 0;
+            break;
+        default:
+            fprintf(logfile, "[%s, %d] Bad %s call. Nullptr returned.\n", __FUNCTION__, __LINE__, __FUNCTION__);
+            return nullptr;
     }
 
-    fprintf(logfile, "[%s] Created node with data.type = %d == %c, data.value = %f\n", __FUNCTION__, node->data.type, node->data.type, node->data.value);
+
+    fprintf(logfile, "[%s] Created node with data.type = %d == %c, data.value = %f and data_flag = %d\n", __FUNCTION__,
+    node->data.type, node->data.type, node->data.value, node->data_flag);
 
     return node;
 }
@@ -69,12 +75,16 @@ int OpPartialGraphDump(Node* node, FILE* dotfile, unsigned char ip, unsigned cha
 
     if(node->left != nullptr){
 
-        if(node->left->data_flag != VALUE){
-            fprintf(logfile, "Created OP node with name \"%d/%d\" and op %c, connected it to ", ip, new_depth, node->left->data.type);
-            fprintf(dotfile, GRAPHVIZ_MKNODE_OP("%d/%d", "%c"), ip, new_depth, node->left->data.type);
-        }else{
-            fprintf(logfile, "Created VALUE node with name \"%d/%d\" and value %f, connected it to ", ip, new_depth, node->left->data.value);
-            fprintf(dotfile, GRAPHVIZ_MKNODE_VALUE("%d/%d", "%.4f"), ip, new_depth, node->left->data.value);
+        switch(node->left->data_flag){
+            case VALUE:
+                fprintf(dotfile, GRAPHVIZ_MKNODE_VALUE("%d/%d", "%.4f"), new_ip, new_depth, node->left->data.value);
+            break;
+            case OP:
+                fprintf(dotfile, GRAPHVIZ_MKNODE_OP("%d/%d", "%c"), new_ip, new_depth, node->left->data.type);
+            break;
+            case VAR:
+                // fprintf(dotfile, GRAPHVIZ_MKNODE_OP("%d/%d", "x"), new_ip, new_depth);
+            break;
         }
 
         fprintf(dotfile, GRAPHVIZ_CONNECT_NODE("\"%d/%d\"", "\"%d/%d\""), ip, depth, ip, new_depth);
@@ -85,11 +95,16 @@ int OpPartialGraphDump(Node* node, FILE* dotfile, unsigned char ip, unsigned cha
     if(node->right != nullptr){
         new_ip = ip | (unsigned char)(1 << (CHAR_BIT - depth - 1));
 
-        if(node->right->data_flag != VALUE){
-            fprintf(dotfile, GRAPHVIZ_MKNODE_OP("%d/%d", "%c"), new_ip, new_depth, node->right->data.type);
-        }
-        else{
-            fprintf(dotfile, GRAPHVIZ_MKNODE_VALUE("%d/%d", "%.4f"), new_ip, new_depth, node->right->data.value);
+        switch(node->right->data_flag){
+            case VALUE:
+                fprintf(dotfile, GRAPHVIZ_MKNODE_VALUE("%d/%d", "%.4f"), new_ip, new_depth, node->right->data.value);
+            break;
+            case OP:
+                fprintf(dotfile, GRAPHVIZ_MKNODE_OP("%d/%d", "%c"), new_ip, new_depth, node->right->data.type);
+            break;
+            case VAR:
+                // fprintf(dotfile, GRAPHVIZ_MKNODE_OP("%d/%d", "x"), new_ip, new_depth);
+            break;
         }
 
         fprintf(dotfile, GRAPHVIZ_CONNECT_NODE("\"%d/%d\"", "\"%d/%d\""), ip, depth, new_ip, new_depth);
@@ -143,10 +158,14 @@ double OpEval(Root* root, FILE* logfile){
     VERIFICATION_LOGFILE(logfile, -1);
     VERIFICATION(root == nullptr, "Input root is nullptr!\n", logfile, -1);
 
-    return OpPartialEval(root->init_node, logfile);
+    bool is_okay = true;
+
+    return OpPartialEval(root->init_node, &is_okay, logfile);
 }
 
-double OpPartialEval(Node* node, FILE* logfile){
+double OpPartialEval(Node* node, bool *is_okay, FILE* logfile){
+
+    if(!(*is_okay)) return 0;
 
     if(node == nullptr){
         #ifdef DEBUG
@@ -157,21 +176,27 @@ double OpPartialEval(Node* node, FILE* logfile){
 
     double tmp = 0.;
 
-    if(!node->data_flag){
+    if(node->data_flag == VAR){
+        fprintf(logfile, "Can't evaluate graph without var's values. Use OpVariableEvaluate() instead.\n");
+        printf("Can't evaluate graph without var's values. Use OpVariableEvaluate() instead.\n");
+        *is_okay = false;
+    }
+
+    if(node->data_flag == OP){
 
         fprintf(logfile, "[%s, %d] Curr node: data.type = %d == %c, data.value = %f\n", __FUNCTION__, __LINE__, node->data.type, node->data.type, node->data.value);
 
         switch(node->data.type){
             case SUMM:
-                return OpPartialEval(node->left, logfile) + OpPartialEval(node->right, logfile);
+                return OpPartialEval(node->left, is_okay, logfile) + OpPartialEval(node->right, is_okay, logfile);
             case SUBTRACTION:
-                return OpPartialEval(node->left, logfile) - OpPartialEval(node->right, logfile);
+                return OpPartialEval(node->left, is_okay, logfile) - OpPartialEval(node->right, is_okay, logfile);
             case MULTIPLICATION:
-                return OpPartialEval(node->left, logfile) * OpPartialEval(node->right, logfile);
+                return OpPartialEval(node->left, is_okay, logfile) * OpPartialEval(node->right, is_okay, logfile);
             case DIVISION:
-                tmp = OpPartialEval(node->right, logfile);
+                tmp = OpPartialEval(node->right, is_okay, logfile);
                 VERIFICATION(IsEqual(tmp, 0), "Division by zero!", logfile, -1);
-                return OpPartialEval(node->left, logfile) / tmp;
+                return OpPartialEval(node->left, is_okay, logfile) / tmp;
             default:
                 fprintf(logfile, "node.type is %d == %c\n", node->data.type, node->data.type);
                 VERIFICATION(true, "Bad node type.", logfile, -1.);

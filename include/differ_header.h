@@ -15,6 +15,7 @@
 union NodeData{
     double value;
     char type;
+    char var_name[8] = {};
 };
 
 enum types{
@@ -24,8 +25,9 @@ enum types{
     MULTIPLICATION  = '*',
     DIVISION        = '/',
     NONE            = '\0',
+    OP              = 0u,
     VALUE           = 1u,
-    OP              = 0u
+    VAR             = 2u
 
 };
 
@@ -33,7 +35,7 @@ struct Node{
     Node* left = nullptr;
     Node* right = nullptr;
     NodeData data = {};
-    unsigned int data_flag : 1;
+    unsigned int data_flag : 2;
 };
 
 struct Root{
@@ -84,7 +86,7 @@ int OpTextDump(Root* root, FILE* logfile);
 
 double OpEval(Root* root, FILE* logfile);
 
-double OpPartialEval(Node* node, FILE* logfile);
+double OpPartialEval(Node* node, bool *is_okay, FILE* logfile);
 
 inline bool IsEqual(double a, double b){
     return fabs(a - b) < EPS;

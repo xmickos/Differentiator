@@ -34,6 +34,13 @@ V  итерация: умножение и деление со скобками
     P ::= '('E')' | N
     N ::= ['0'-'9']+
 
+VI  итерация: одна переменная 'x'
+    G ::= E'\0'
+    E ::= T{[+-]T}*
+    T ::= P{[*\]P}*
+    P ::= '('E')' | N | 'x'
+    N ::= ['0'-'9']+
+
     (2+5)*(2-5)'\0'
 */
 
@@ -101,52 +108,6 @@ Node* PartialGetE(FILE* logfile){
     return subroot;
 }
 
-/*
-Node* GetT(FILE* logfile){
-    DEBUG_ECHO(logfile);
-
-    int op = 0;
-
-    // Node *node = GetP(logfile);
-    // Node* node_left = OpNew(VALUE, val , logfile);
-
-    DEBUG_CALL(GetP, logfile);
-    Node *node_left = GetP(logfile);
-
-    Node *node_right = nullptr, *node = nullptr, *val2 = nullptr;
-
-    while(s[p] == MULTIPLICATION || s[p] == DIVISION){
-        DEBUG_ECHO(logfile);
-
-        op = s[p];
-        p++;
-
-        DEBUG_CALL(GetP, logfile);
-        node_right = GetP(logfile);
-
-        node = OpNew(OP, op, logfile);
-
-        if(s[p] ==
-
-        node->left  = node_left;
-        node->right = node_right;
-
-        // switch(op){
-        //     case '*':
-        //         val = val * val2;
-        //         break;
-        //     case '/':
-        //         val = val / val2;
-        //         break;
-        //     default:
-        //         DEBUG_CALL(syntax_error, logfile);
-        //         syntax_error(logfile);
-        // }
-    }
-
-
-    return node;
-} */
 
 Node* GetT(FILE* logfile){
     DEBUG_ECHO(logfile);
@@ -180,7 +141,9 @@ Node* PartialGetT(FILE* logfile){
     DEBUG_CALL(GetP, logfile);
     Node *node_right = GetP(logfile);
 
-    if(node_right->data_flag){
+    fprintf(logfile, "[%s, %d]: GetP returned %p\n", __FUNCTION__, __LINE__, node_right);
+
+    if(node_right->data_flag == VALUE){
         fprintf(logfile, "I am %s, got node with val = %f from GetP\n", __FUNCTION__, node_right->data.value);
     }
 
@@ -207,20 +170,34 @@ Node* GetP(FILE* logfile){
 
     Node* node = nullptr;
 
+    if(s[p] == 'x'){
+        fprintf(logfile, "Variable case.\n");
+        node = OpNew(VAR, 0, logfile);
+        p++;
+        return node;
+    }
+
     if(s[p] == '('){
         p++;
+        DEBUG_ECHO(logfile);
         DEBUG_CALL(GetE, logfile);
         node = GetE(logfile);
         VERIFICATION(node == nullptr, "GetE failed!", logfile, nullptr);
-        fprintf(logfile, "I am %s, got from GetN node with val = %f\n", __FUNCTION__, node->data.value);
+        fprintf(logfile, "I am %s, got from GetE node with val = %f, data.type = %c and data_flag = %d\n", __FUNCTION__,
+                node->data.value, node->data.type, node->data_flag);
     }else{
+        fprintf(logfile, "Default case.\n");
         DEBUG_CALL(GetN, logfile);
         Node *debug_variable = GetN(logfile);
         fprintf(logfile, "I am %s, got from GetN node with val = %f\n", __FUNCTION__, debug_variable->data.value);
         return debug_variable;
     }
+
+    fprintf(logfile, "[%s, %d]: curr s[%d] is %c\n", __FUNCTION__, __LINE__, p, s[p]);
+
     if(s[p] == ')'){
         p++;
+        fprintf(logfile, "[%s, %d]: Exiting with \')\'\n", __FUNCTION__, __LINE__);
         return node;
     }
 
@@ -245,15 +222,15 @@ Node* GetN(FILE* logfile){
     int k = 1;
 
     DEBUG_ECHO(logfile);
-    fprintf(logfile, "curr d_val before evaluating fractional part: %f\n", d_val);
+    // fprintf(logfile, "curr d_val before evaluating fractional part: %f\n", d_val);
     if(s[p] == '.'){
         p++;
 
         while(s[p] - '0' <= 9 && s[p] - '0' >= 0){
             DEBUG_ECHO(logfile);
-            fprintf(logfile, "[%s, %d]: s[p] - \'0\' == %d\n", __FUNCTION__, __LINE__, s[p] - '0');
+            // fprintf(logfile, "[%s, %d]: s[p] - \'0\' == %d\n", __FUNCTION__, __LINE__, s[p] - '0');
             d_val = d_val + (double)(s[p] - '0') / d_pow(10.0, k);
-            fprintf(logfile, "current d_val is %f\n", d_val);
+            // fprintf(logfile, "current d_val is %f\n", d_val);
             p++;
             k++;
         }

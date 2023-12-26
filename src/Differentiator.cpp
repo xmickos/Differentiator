@@ -11,7 +11,7 @@ int main(){
     ret_val = RootCtor(&root, logfile);
     RETURN_CHECK(ret_val);
 
-    const char my_str[128] = "(0.578+0.172)*(0.823+0.117)-1.711/(4.418+1.382)";
+    const char my_str[128] = "(0.578+0.172)*(0.823+0.117)-1.711/(4.418+x)";
 
     free(root.init_node);
 
