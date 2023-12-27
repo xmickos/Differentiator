@@ -15,7 +15,10 @@ int main(){
 
     free(root.init_node);
 
-    root.init_node = GetG(my_str, logfile);
+    RD_output *rd_output = GetG(my_str, logfile);
+
+    root.init_node = rd_output->node;
+    root.vars_count = rd_output->vars_count;
 
     OpTextDump(&root, logfile);
 

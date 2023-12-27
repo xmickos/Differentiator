@@ -8,6 +8,11 @@ int RootCtor(Root* root, FILE* logfile){
     root->init_node = (Node*)calloc(1, sizeof(Node));
     VERIFICATION(root->init_node == nullptr, "Calloc for root->init_node failed!", logfile, -1);
 
+    root->vars = (Variable*)calloc(MAX_VARS_COUNT, sizeof(Variable));
+    VERIFICATION(root->init_node == nullptr, "Calloc for root->vars failed!", logfile, -1);
+
+    root->vars_count = 0;
+
     return 0;
 }
 
@@ -197,14 +202,22 @@ double OpEval(const Root* root, FILE* logfile){
     VERIFICATION_LOGFILE(logfile, -1);
     VERIFICATION(root == nullptr, "Input root is nullptr!\n", logfile, -1);
 
-    bool is_okay = true;
+    if(root->vars_count > 0){
+        printf("Your graph has %d variables. Please enter their values one-by-one:\n", root->vars_count);
 
-    return OpPartialEval(root->init_node, &is_okay, logfile);
+        for(unsigned int i = 0; i < root->vars_count; i++){
+            printf("%s = ", root->vars[i].name);
+            if( scanf("%lf", &(root->vars[i].value)) == 0){
+                i--;
+            }
+            printf("\n");
+        }
+    }
+
+    return OpPartialEval(root->init_node, logfile);
 }
 
-double OpPartialEval(const Node* node, bool *is_okay, FILE* logfile){
-
-    if(!(*is_okay)) return 0;
+double OpPartialEval(const Node* node, FILE* logfile){
 
     if(node == nullptr){
         #ifdef DEBUG
@@ -215,27 +228,21 @@ double OpPartialEval(const Node* node, bool *is_okay, FILE* logfile){
 
     double tmp = 0.;
 
-    if(node->data_flag == VAR){
-        fprintf(logfile, "Can't evaluate graph without var's values. Use OpVariableEvaluate() instead.\n");
-        printf("Can't evaluate graph without var's values. Use OpVariableEvaluate() instead.\n");
-        *is_okay = false;
-    }
-
     if(node->data_flag == OP){
 
         fprintf(logfile, "[%s, %d] Curr node: data.type = %d == %c, data.value = %f\n", __FUNCTION__, __LINE__, node->data.type, node->data.type, node->data.value);
 
         switch(node->data.type){
             case SUMM:
-                return OpPartialEval(node->left, is_okay, logfile) + OpPartialEval(node->right, is_okay, logfile);
+                return OpPartialEval(node->left, logfile) + OpPartialEval(node->right, logfile);
             case SUBTRACTION:
-                return OpPartialEval(node->left, is_okay, logfile) - OpPartialEval(node->right, is_okay, logfile);
+                return OpPartialEval(node->left, logfile) - OpPartialEval(node->right, logfile);
             case MULTIPLICATION:
-                return OpPartialEval(node->left, is_okay, logfile) * OpPartialEval(node->right, is_okay, logfile);
+                return OpPartialEval(node->left, logfile) * OpPartialEval(node->right, logfile);
             case DIVISION:
-                tmp = OpPartialEval(node->right, is_okay, logfile);
+                tmp = OpPartialEval(node->right, logfile);
                 VERIFICATION(IsEqual(tmp, 0), "Division by zero!", logfile, -1);
-                return OpPartialEval(node->left, is_okay, logfile) / tmp;
+                return OpPartialEval(node->left, logfile) / tmp;
             default:
                 fprintf(logfile, "node.type is %d == %c\n", node->data.type, node->data.type);
                 VERIFICATION(true, "Bad node type.", logfile, -1.);

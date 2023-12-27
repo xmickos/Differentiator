@@ -2,8 +2,9 @@
 #include "RD_header.hpp"
 
 
-int p = 0;
-const char* s = NULL;
+// int p = 0;
+// const char* s = NULL;
+// unsigned int vars_count = 0;
 
 
 /*
@@ -45,34 +46,48 @@ VI  итерация: одна переменная 'x'
 */
 
 
-Node* GetG(const char* str, FILE* logfile){
+RD_output* GetG(const char* str, FILE* logfile){
     VERIFICATION_LOGFILE(logfile, nullptr);
 
-    s = str;
-    p = 0;
+    RD_data *data = nullptr;
+
+    data = (RD_data*)calloc(1, sizeof(RD_data));
+    data->s = str;
+    data->p = 0;
+    data->vars = (char**)calloc(MAX_VARS_COUNT, sizeof(char*));
+    VERIFICATION(data->vars == nullptr, "data->vars calloc failed!", logfile, nullptr;);
+
+
+    RD_output *output = (RD_output*)calloc(1, sizeof(RD_output));
+    VERIFICATION(output == nullptr, "RD_output calloc failed!", logfile, nullptr;);
 
     DEBUG_CALL(GetE, logfile);
-    Node* node = GetE(logfile);
+    Node* node = GetE(data, logfile);
 
-    if(s[p] == '\0'){
-        return node;
+    if(data->s[data->p] == '\0'){
+        output->vars_count = data->vars_count;
+        output->node = node;
+        return output;
     }
 
     DEBUG_CALL(syntax_error, logfile);
-    return syntax_error(logfile);
+    printf("\033[1;31mSyntax error\033[0m at p = %d: %s\n", data->p, data->s + data->p);
+    fprintf(logfile, "Syntax error at p = %d: s = %s\n", data->p, data->s + data->p);
+
+    exit(-1);       // ?..
 }
 
-Node* GetE(FILE* logfile){
+Node* GetE(RD_data *data, FILE* logfile){
     DEBUG_ECHO(logfile);
 
     DEBUG_CALL(GetT, logfile);
-    Node *node_left = GetT(logfile);
+    Node *node_left = GetT(data, logfile);
     Node *node = nullptr;
 
-    if(s[p] == SUMM || s[p] == SUBTRACTION){
+    if(data->s[data->p] == SUMM || data->s[data->p] == SUBTRACTION){
 
         DEBUG_CALL(PartialGetE, logfile);
-        node = PartialGetE(logfile);
+        node = PartialGetE(data, logfile);
 
         node->left = node_left;
 
@@ -83,21 +98,21 @@ Node* GetE(FILE* logfile){
 
 }
 
-Node* PartialGetE(FILE* logfile){
+Node* PartialGetE(RD_data *data, FILE* logfile){
     DEBUG_ECHO(logfile);
 
-    Node *subroot = OpNew(OP, s[p], logfile);
+    Node *subroot = OpNew(OP, data->s[data->p], logfile);
 
-    p++;
+    data->p++;
 
     DEBUG_CALL(GetT, logfile);
-    Node *node_right = GetT(logfile);
+    Node *node_right = GetT(data, logfile);
     Node *subsubroot = nullptr;
 
-    if(s[p] == SUMM || s[p] == SUBTRACTION){
+    if(data->s[data->p] == SUMM || data->s[data->p] == SUBTRACTION){
 
         DEBUG_CALL(PartialGetE, logfile);
-        subsubroot = PartialGetE(logfile);
+        subsubroot = PartialGetE(data, logfile);
 
         subroot->right = subsubroot;
         subsubroot->left = node_right;
@@ -109,17 +124,17 @@ Node* PartialGetE(FILE* logfile){
 }
 
 
-Node* GetT(FILE* logfile){
+Node* GetT(RD_data *data, FILE* logfile){
     DEBUG_ECHO(logfile);
 
     DEBUG_CALL(GetP, logfile);
-    Node *node_left = GetP(logfile);
+    Node *node_left = GetP(data, logfile);
     Node* node = nullptr;
 
-    if(s[p] == MULTIPLICATION || s[p] == DIVISION){
+    if(data->s[data->p] == MULTIPLICATION || data->s[data->p] == DIVISION){
 
         DEBUG_CALL(PartialGetT, logfile);
-        node = PartialGetT(logfile);
+        node = PartialGetT(data, logfile);
 
         node->left = node_left;
 
@@ -131,15 +146,15 @@ Node* GetT(FILE* logfile){
 
 }
 
-Node* PartialGetT(FILE* logfile){
+Node* PartialGetT(RD_data *data, FILE* logfile){
     DEBUG_ECHO(logfile);
 
-    Node *subroot = OpNew(OP, s[p], logfile);
+    Node *subroot = OpNew(OP, data->s[data->p], logfile);
 
-    p++;
+    data->p++;
 
     DEBUG_CALL(GetP, logfile);
-    Node *node_right = GetP(logfile);
+    Node *node_right = GetP(data, logfile);
 
     fprintf(logfile, "[%s, %d]: GetP returned %p\n", __FUNCTION__, __LINE__, node_right);
 
@@ -149,10 +164,10 @@ Node* PartialGetT(FILE* logfile){
 
     Node *subsubroot = nullptr;
 
-    if(s[p] == MULTIPLICATION || s[p] == DIVISION){
+    if(data->s[data->p] == MULTIPLICATION || data->s[data->p] == DIVISION){
 
         DEBUG_CALL(PartialGetT, logfile);
-        subsubroot = PartialGetT(logfile);
+        subsubroot = PartialGetT(data, logfile);
 
         subroot->right = subsubroot;
         subsubroot->left = node_right;
@@ -165,38 +180,41 @@ Node* PartialGetT(FILE* logfile){
 
 
 
-Node* GetP(FILE* logfile){
+Node* GetP(RD_data *data, FILE* logfile){
     DEBUG_ECHO(logfile);
 
     Node* node = nullptr;
 
-    if(s[p] == 'x'){
+    if(data->s[data->p] == 'x'){
         fprintf(logfile, "Variable case.\n");
         node = OpNew(VAR, 0, logfile);
-        p++;
+        data->p++;
+        if(!is_known_var()){
+            data->vars_count++;
+        }
         return node;
     }
 
-    if(s[p] == '('){
-        p++;
+    if(data->s[data->p] == '('){
+        data->p++;
         DEBUG_ECHO(logfile);
         DEBUG_CALL(GetE, logfile);
-        node = GetE(logfile);
+        node = GetE(data, logfile);
         VERIFICATION(node == nullptr, "GetE failed!", logfile, nullptr);
         fprintf(logfile, "I am %s, got from GetE node with val = %f, data.type = %c and data_flag = %d\n", __FUNCTION__,
                 node->data.value, node->data.type, node->data_flag);
     }else{
         fprintf(logfile, "Default case.\n");
         DEBUG_CALL(GetN, logfile);
-        Node *debug_variable = GetN(logfile);
+        Node *debug_variable = GetN(data, logfile);
         fprintf(logfile, "I am %s, got from GetN node with val = %f\n", __FUNCTION__, debug_variable->data.value);
         return debug_variable;
     }
 
-    fprintf(logfile, "[%s, %d]: curr s[%d] is %c\n", __FUNCTION__, __LINE__, p, s[p]);
+    fprintf(logfile, "[%s, %d]: curr s[%d] is %c\n", __FUNCTION__, __LINE__, data->p, data->s[data->p]);
 
-    if(s[p] == ')'){
-        p++;
+    if(data->s[data->p] == ')'){
+        data->p++;
         fprintf(logfile, "[%s, %d]: Exiting with \')\'\n", __FUNCTION__, __LINE__);
         return node;
     }
@@ -204,34 +222,31 @@ Node* GetP(FILE* logfile){
     return nullptr;
 }
 
-Node* GetN(FILE* logfile){
+Node* GetN(RD_data *data, FILE* logfile){
     DEBUG_ECHO(logfile);
 
     int val = 0;
 
-    if(s[p] - '0' > 9 || s[p] - '0' < 0){
-        syntax_error(logfile);                  //Хотя бы одна цифра в начале должна быть,
+    if(data->s[data->p] - '0' > 9 || data->s[data->p] - '0' < 0){
+        syntax_error(data, logfile);            //Хотя бы одна цифра в начале должна быть,
     }                                           //иначе syntax_error; Тогда пустые строки запрещены
 
-    while(s[p] - '0' <= 9 && s[p] - '0' >= 0){
-        val = 10*val + s[p] - '0';
-        p++;
+    while(data->s[data->p] - '0' <= 9 && data->s[data->p] - '0' >= 0){
+        val = 10*val + data->s[data->p] - '0';
+        data->p++;
     }
 
     double d_val = (double)val;
     int k = 1;
 
     DEBUG_ECHO(logfile);
-    // fprintf(logfile, "curr d_val before evaluating fractional part: %f\n", d_val);
-    if(s[p] == '.'){
-        p++;
+    if(data->s[data->p] == '.'){
+        data->p++;
 
-        while(s[p] - '0' <= 9 && s[p] - '0' >= 0){
+        while(data->s[data->p] - '0' <= 9 && data->s[data->p] - '0' >= 0){
             DEBUG_ECHO(logfile);
-            // fprintf(logfile, "[%s, %d]: s[p] - \'0\' == %d\n", __FUNCTION__, __LINE__, s[p] - '0');
-            d_val = d_val + (double)(s[p] - '0') / d_pow(10.0, k);
-            // fprintf(logfile, "current d_val is %f\n", d_val);
-            p++;
+            d_val = d_val + (double)(data->s[data->p] - '0') / d_pow(10.0, k);
+            data->p++;
             k++;
         }
     }
@@ -243,11 +258,11 @@ Node* GetN(FILE* logfile){
     return node;
 }
 
-Node* syntax_error(FILE* logfile){
+Node* syntax_error(RD_data *data, FILE* logfile){
     VERIFICATION_LOGFILE(logfile, nullptr);
 
-    printf("\033[1;31mSyntax error\033[0m at p = %d: %s\n", p, s + p);
-    fprintf(logfile, "Syntax error at p = %d: s = %s\n", p, s + p);
+    printf("\033[1;31mSyntax error\033[0m at p = %d: %s\n", data->p, data->s + data->p);
+    fprintf(logfile, "Syntax error at p = %d: s = %s\n", data->p, data->s + data->p);
 
     exit(-1);       // ?..
 

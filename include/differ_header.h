@@ -12,10 +12,13 @@
 
 #define NONILL
 
+#define MAX_VARS_COUNT 128
+
+#define MAX_VAR_NAME_LENGTH 128
+
 union NodeData{
     double value;
     char type;
-    char var_name[8] = {};
 };
 
 enum types{
@@ -38,8 +41,15 @@ struct Node{
     unsigned int data_flag : 2;
 };
 
+struct Variable{
+    char name[MAX_VAR_NAME_LENGTH] = {};
+    double value = 0.;
+};
+
 struct Root{
-    Node* init_node = nullptr;          // shiza
+    Node* init_node = nullptr;
+    Variable *vars  = nullptr;
+    unsigned int vars_count = 0;
 };
 
 
@@ -88,7 +98,7 @@ int OpTextDump(const Root* root, FILE* logfile);
 
 double OpEval(const Root* root, FILE* logfile);
 
-double OpPartialEval(const Node* node, bool *is_okay, FILE* logfile);
+double OpPartialEval(const Node* node, FILE* logfile);
 
 inline bool IsEqual(double a, double b){
     return fabs(a - b) < EPS;
@@ -97,3 +107,4 @@ inline bool IsEqual(double a, double b){
 int OpTree2Text(const Root* root, FILE* outputfile, FILE* logfile);
 
 int OpPartialTree2Text(const Node* node, FILE* outputfile, FILE* logfile);
+

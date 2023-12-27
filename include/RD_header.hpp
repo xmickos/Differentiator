@@ -3,7 +3,7 @@
 
 #define DEFAULT_SIZE 128
 
-#define DEBUG_ECHO(logfile) do{ fprintf(logfile, "I am %s, p = %d, next symbols is %c\n", __FUNCTION__, p, s[p]); }while(0)
+#define DEBUG_ECHO(logfile) do{ fprintf(logfile, "I am %s, p = %d, next symbols is %c\n", __FUNCTION__, data->p, data->s[data->p]); }while(0)
 #define DEBUG_CALL(next_func, logfile) do{ fprintf(logfile, "I am %s, calling " #next_func "\n", __FUNCTION__);}while(0)
 
 struct Lexema{
@@ -12,22 +12,34 @@ struct Lexema{
     char name[128] = {};
 };
 
+struct RD_output{
+    Node* node = nullptr;
+    unsigned int vars_count = 0;
+};
 
-Node* syntax_error(FILE* logfile);
+struct RD_data{
+    int p = 0;
+    const char* s = NULL;
+    unsigned int vars_count = 0;
+    char **vars = nullptr;
+};
 
-Node* GetG(const char* str, FILE* logfile);
 
-Node* GetE(FILE* logfile);
+Node* syntax_error(RD_data *data, FILE* logfile);
 
-Node* GetT(FILE* logfile);
+RD_output* GetG(const char* str, FILE* logfile);
 
-Node* GetP(FILE* logfile);
+Node* GetE(RD_data *data, FILE* logfile);
 
-Node* GetN(FILE* logfile);
+Node* GetT(RD_data *data, FILE* logfile);
 
-Node* PartialGetE(FILE* logfile);
+Node* GetP(RD_data *data, FILE* logfile);
 
-Node* PartialGetT(FILE* logfile);
+Node* GetN(RD_data *data, FILE* logfile);
+
+Node* PartialGetE(RD_data *data, FILE* logfile);
+
+Node* PartialGetT(RD_data *data, FILE* logfile);
 
 inline double d_pow(double d, int k){
 
