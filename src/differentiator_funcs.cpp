@@ -45,18 +45,32 @@ Node* OpNew(unsigned int data_flag, double value, FILE* logfile){
     return node;
 }
 
-int OpGraphDump(Root* root, FILE* dotfile, FILE* logfile){
+int OpGraphDump(const Root* root, FILE* dotfile, FILE* logfile){
     VERIFICATION_LOGFILE(logfile, -1);
     VERIFICATION(root == nullptr, "Input root is nullptr!", logfile, -1);
     VERIFICATION(dotfile == nullptr, "Input dotfile is nullptr!", logfile, -1);
 
     fprintf(dotfile, GRAPHVIZ_INIT);
 
-    if(root->init_node->data_flag != VALUE){
-        fprintf(dotfile, GRAPHVIZ_MKNODE_OP("0/0", "%c"), root->init_node->data.type);
-    }else{
-        fprintf(dotfile, GRAPHVIZ_MKNODE_VALUE("0/0", "%f"), root->init_node->data.value);
+    switch(root->init_node->data_flag){
+        case VALUE:
+            fprintf(logfile, "[%s, %d] Value!\n", __FUNCTION__, __LINE__);
+            fprintf(dotfile, GRAPHVIZ_MKNODE_VALUE("0/0", "%f"), root->init_node->data.value);
+        break;
+        case OP:
+            fprintf(logfile, "[%s, %d] Op!\n", __FUNCTION__, __LINE__);
+            fprintf(dotfile, GRAPHVIZ_MKNODE_OP("0/0", "%c"), root->init_node->data.type);
+        break;
+        case VAR:
+            fprintf(logfile, "[%s, %d] Var!\n", __FUNCTION__, __LINE__);
+            fprintf(dotfile, GRAPHVIZ_MKNODE_OP("0/0", "x"));
+        break;
+        default:
+            fprintf(logfile, "[%s, %d]: Wrong node data type.\nExiting...\n", __FUNCTION__, __LINE__);
+            return -1;
     }
+
+
 
     OpPartialGraphDump(root->init_node, dotfile, 0, (char)0, logfile);
 
@@ -65,7 +79,7 @@ int OpGraphDump(Root* root, FILE* dotfile, FILE* logfile){
     return 0;
 }
 
-int OpPartialGraphDump(Node* node, FILE* dotfile, unsigned char ip, unsigned char depth, FILE* logfile){
+int OpPartialGraphDump(const Node* node, FILE* dotfile, unsigned char ip, unsigned char depth, FILE* logfile){
     VERIFICATION_LOGFILE(logfile, -1);
     VERIFICATION(dotfile == nullptr, "Input dotfile is nullptr!", logfile, -1);
 
@@ -77,14 +91,21 @@ int OpPartialGraphDump(Node* node, FILE* dotfile, unsigned char ip, unsigned cha
 
         switch(node->left->data_flag){
             case VALUE:
-                fprintf(dotfile, GRAPHVIZ_MKNODE_VALUE("%d/%d", "%.4f"), new_ip, new_depth, node->left->data.value);
+                fprintf(logfile, "[%s, %d] Value! %.4f -> %d/%d, old ip & depth: %d/%d\n", __FUNCTION__, __LINE__,
+                node->left->data.value, new_ip, new_depth, ip, depth);
+                fprintf(dotfile, GRAPHVIZ_MKNODE_VALUE("%d/%d", "%.4f"), ip, new_depth, node->left->data.value);
             break;
             case OP:
-                fprintf(dotfile, GRAPHVIZ_MKNODE_OP("%d/%d", "%c"), new_ip, new_depth, node->left->data.type);
+                fprintf(logfile, "[%s, %d] Op!\n", __FUNCTION__, __LINE__);
+                fprintf(dotfile, GRAPHVIZ_MKNODE_OP("%d/%d", "%c"), ip, new_depth, node->left->data.type);
             break;
             case VAR:
-                // fprintf(dotfile, GRAPHVIZ_MKNODE_OP("%d/%d", "x"), new_ip, new_depth);
+                fprintf(logfile, "[%s, %d] Var!\n", __FUNCTION__, __LINE__);
+                fprintf(dotfile, GRAPHVIZ_MKNODE_OP("%d/%d", "x"), ip, new_depth);
             break;
+            default:
+                fprintf(logfile, "[%s, %d]: Wrong node data type.\nExiting...\n", __FUNCTION__, __LINE__);
+                return -1;
         }
 
         fprintf(dotfile, GRAPHVIZ_CONNECT_NODE("\"%d/%d\"", "\"%d/%d\""), ip, depth, ip, new_depth);
@@ -97,14 +118,20 @@ int OpPartialGraphDump(Node* node, FILE* dotfile, unsigned char ip, unsigned cha
 
         switch(node->right->data_flag){
             case VALUE:
+                fprintf(logfile, "[%s, %d] Value!\n", __FUNCTION__, __LINE__);
                 fprintf(dotfile, GRAPHVIZ_MKNODE_VALUE("%d/%d", "%.4f"), new_ip, new_depth, node->right->data.value);
             break;
             case OP:
+                fprintf(logfile, "[%s, %d] Op!\n", __FUNCTION__, __LINE__);
                 fprintf(dotfile, GRAPHVIZ_MKNODE_OP("%d/%d", "%c"), new_ip, new_depth, node->right->data.type);
             break;
             case VAR:
-                // fprintf(dotfile, GRAPHVIZ_MKNODE_OP("%d/%d", "x"), new_ip, new_depth);
+                fprintf(logfile, "[%s, %d] Var!\n", __FUNCTION__, __LINE__);
+                fprintf(dotfile, GRAPHVIZ_MKNODE_VAR("%d/%d", "x"), new_ip, new_depth);
             break;
+            default:
+                fprintf(logfile, "[%s, %d]: Wrong node data type.\nExiting...\n", __FUNCTION__, __LINE__);
+                return -1;
         }
 
         fprintf(dotfile, GRAPHVIZ_CONNECT_NODE("\"%d/%d\"", "\"%d/%d\""), ip, depth, new_ip, new_depth);
@@ -117,25 +144,37 @@ int OpPartialGraphDump(Node* node, FILE* dotfile, unsigned char ip, unsigned cha
     return 0;
 }
 
-int OpTextDump(Root* root, FILE* logfile){
+int OpTextDump(const Root* root, FILE* logfile){
     VERIFICATION_LOGFILE(logfile, -1);
     VERIFICATION(root == nullptr, "Input root is nullptr", logfile, -1);
 
     OpPartialTextDump(root->init_node, 0, logfile);
 
+    fprintf(logfile, "\n");
+
     return 0;
 }
 
-int OpPartialTextDump(Node* node, size_t indent, FILE* logfile){
+int OpPartialTextDump(const Node* node, size_t indent, FILE* logfile){
     VERIFICATION_LOGFILE(logfile, -1);
 
     if(node == nullptr) return 0;
 
     IndentMe(indent + 1u, logfile);
-    if(node->data_flag == VALUE){
-        fprintf(logfile, "%f\n", node->data.value);
-    }else{
-        fprintf(logfile, "%c\n", node->data.type);
+
+    switch(node->data_flag){
+        case VALUE:
+            fprintf(logfile, "%f\n", node->data.value);
+        break;
+        case OP:
+            fprintf(logfile, "%c\n", node->data.type);
+        break;
+        case VAR:
+            fprintf(logfile, "x\n");
+        break;
+        default:
+            fprintf(logfile, "[%s, %d]: Wrong node data type.\nExiting...\n", __FUNCTION__, __LINE__);
+            return -1;
     }
 
     IndentMe(indent + 1u, logfile);
@@ -149,12 +188,12 @@ int OpPartialTextDump(Node* node, size_t indent, FILE* logfile){
     return 0;
 }
 
-void IndentMe(size_t count, FILE* logfile){
+inline void IndentMe(size_t count, FILE* logfile){
     VERIFICATION_LOGFILE(logfile, );
     for(size_t i = 0; i < count; i++) fprintf(logfile, "\t");
 }
 
-double OpEval(Root* root, FILE* logfile){
+double OpEval(const Root* root, FILE* logfile){
     VERIFICATION_LOGFILE(logfile, -1);
     VERIFICATION(root == nullptr, "Input root is nullptr!\n", logfile, -1);
 
@@ -163,7 +202,7 @@ double OpEval(Root* root, FILE* logfile){
     return OpPartialEval(root->init_node, &is_okay, logfile);
 }
 
-double OpPartialEval(Node* node, bool *is_okay, FILE* logfile){
+double OpPartialEval(const Node* node, bool *is_okay, FILE* logfile){
 
     if(!(*is_okay)) return 0;
 
@@ -208,7 +247,7 @@ double OpPartialEval(Node* node, bool *is_okay, FILE* logfile){
     return 0;
 }
 
-int OpTree2Text(Root* root, FILE* outputfile, FILE* logfile){
+int OpTree2Text(const Root* root, FILE* outputfile, FILE* logfile){
     VERIFICATION_LOGFILE(logfile, -1);
     VERIFICATION(outputfile == nullptr, "Input outputfile is nullptr!", logfile, -1);
     VERIFICATION(root == nullptr, "Input root is nullptr!", logfile, -1);
@@ -218,7 +257,7 @@ int OpTree2Text(Root* root, FILE* outputfile, FILE* logfile){
     return 0;
 }
 
-int OpPartialTree2Text(Node* node, FILE* outputfile, FILE* logfile){
+int OpPartialTree2Text(const Node* node, FILE* outputfile, FILE* logfile){
 
     if(node == nullptr){
         #ifndef NONILL
@@ -228,20 +267,28 @@ int OpPartialTree2Text(Node* node, FILE* outputfile, FILE* logfile){
         return 0;
     }
 
-    fprintf(outputfile, "(");
+    if(node->data_flag == OP) fprintf(outputfile, "(");
 
     OpPartialTree2Text(node->left, logfile, logfile);
 
-    if(node->data_flag == VALUE){
-        fprintf(outputfile, "%.2f", node->data.value);
-    }else{
-        fprintf(outputfile, "%c", node->data.type);
+    switch(node->data_flag){
+        case VALUE:
+            fprintf(outputfile, "%.4f", node->data.value);
+        break;
+        case OP:
+            fprintf(outputfile, "%c", node->data.type);
+        break;
+        case VAR:
+            fprintf(outputfile, "x");
+        break;
+        default:
+            fprintf(outputfile, "[%s, %d]: Wrong node data type.\nExiting...\n", __FUNCTION__, __LINE__);
+            return -1;
     }
 
     OpPartialTree2Text(node->right, logfile, logfile);
 
-    fprintf(outputfile, ")");
-
+    if(node->data_flag == OP) fprintf(outputfile, ")");
 
     return 0;
 }

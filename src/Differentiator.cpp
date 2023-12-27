@@ -23,7 +23,9 @@ int main(){
     OpGraphDump(&root, dotfile, logfile);
     fclose(dotfile);
 
-    printf("Answer is %f\n", OpEval(&root, logfile));
+    printf("Answer for %s is %f\n", my_str, OpEval(&root, logfile));
+
+    OpTree2Text(&root, logfile, logfile);
 
     fclose(logfile);
     return 0;

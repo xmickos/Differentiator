@@ -62,9 +62,11 @@ edge [fontname=\"Helvetica,Arial,sans-serif\"]\n\
 node [\n\tfontsize = \"16\"\n\tshape = \"ellipse\"\n];\n\n\
 edge [ ];\n\n"
 
+#define GRAPHVIZ_MKNODE_VALUE(name, data) #name "[\n\tlabel = \"{<f0> " data "}\"\n\tshape=record\n];\n\n"
+
 #define GRAPHVIZ_MKNODE_OP(name, data) #name "[\n\tlabel = \"" data "\"\n\tshape=circle\n];\n\n"
 
-#define GRAPHVIZ_MKNODE_VALUE(name, data) #name "[\n\tlabel = \"{<f0> " data "}\"\n\tshape=record\n];\n\n"
+#define GRAPHVIZ_MKNODE_VAR(name, data) #name "[\n\tlabel = \"" data "\"\n\tshape=diamond\n];\n\n"
 
 #define GRAPHVIZ_CONNECT_NODE(first_id, second_id) first_id " -> " second_id "\n\n"
 
@@ -74,24 +76,24 @@ int RootCtor(Root* root, FILE* logfile);
 
 Node* OpNew(unsigned int data_flag, double value, FILE* logfile);
 
-int OpPartialGraphDump(Node* node, FILE* dotfile, unsigned char ip, unsigned char depth, FILE* logfile);
+int OpPartialGraphDump(const Node* node, FILE* dotfile, unsigned char ip, unsigned char depth, FILE* logfile);
 
-int OpGraphDump(Root* root, FILE* dotfile, FILE* logfile);
+int OpGraphDump(const Root* root, FILE* dotfile, FILE* logfile);
 
-int OpPartialTextDump(Node* node, size_t indent, FILE* logfile);
+int OpPartialTextDump(const Node* node, size_t indent, FILE* logfile);
 
-void IndentMe(size_t count, FILE* logfile);
+inline void IndentMe(size_t count, FILE* logfile);
 
-int OpTextDump(Root* root, FILE* logfile);
+int OpTextDump(const Root* root, FILE* logfile);
 
-double OpEval(Root* root, FILE* logfile);
+double OpEval(const Root* root, FILE* logfile);
 
-double OpPartialEval(Node* node, bool *is_okay, FILE* logfile);
+double OpPartialEval(const Node* node, bool *is_okay, FILE* logfile);
 
 inline bool IsEqual(double a, double b){
     return fabs(a - b) < EPS;
 }
 
-int OpTree2Text(Root* root, FILE* outputfile, FILE* logfile);
+int OpTree2Text(const Root* root, FILE* outputfile, FILE* logfile);
 
-int OpPartialTree2Text(Node* node, FILE* outputfile, FILE* logfile);
+int OpPartialTree2Text(const Node* node, FILE* outputfile, FILE* logfile);
