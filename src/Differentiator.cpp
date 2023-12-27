@@ -19,6 +19,7 @@ int main(){
 
     root.init_node = rd_output->node;
     root.vars_count = rd_output->vars_count;
+    root.vars = rd_output->vars;
 
     OpTextDump(&root, logfile);
 

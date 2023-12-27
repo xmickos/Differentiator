@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #define DEFAULT_SIZE 128
 
@@ -14,6 +15,7 @@ struct Lexema{
 
 struct RD_output{
     Node* node = nullptr;
+    Variable* vars = nullptr;
     unsigned int vars_count = 0;
 };
 
@@ -21,7 +23,7 @@ struct RD_data{
     int p = 0;
     const char* s = NULL;
     unsigned int vars_count = 0;
-    char **vars = nullptr;
+    Variable *vars = nullptr;
 };
 
 
@@ -40,6 +42,8 @@ Node* GetN(RD_data *data, FILE* logfile);
 Node* PartialGetE(RD_data *data, FILE* logfile);
 
 Node* PartialGetT(RD_data *data, FILE* logfile);
+
+bool is_known_var(RD_data *data, const char* target_name, FILE* logfile);
 
 inline double d_pow(double d, int k){
 

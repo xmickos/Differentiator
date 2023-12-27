@@ -42,8 +42,9 @@ struct Node{
 };
 
 struct Variable{
-    char name[MAX_VAR_NAME_LENGTH] = {};
+    char *name = nullptr;
     double value = 0.;
+    Node* node_p = nullptr;
 };
 
 struct Root{

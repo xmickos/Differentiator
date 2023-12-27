@@ -54,7 +54,8 @@ RD_output* GetG(const char* str, FILE* logfile){
     data = (RD_data*)calloc(1, sizeof(RD_data));
     data->s = str;
     data->p = 0;
-    data->vars = (char**)calloc(MAX_VARS_COUNT, sizeof(char*));
+    data->vars_count = 0;
+    data->vars = (Variable*)calloc(MAX_VARS_COUNT, sizeof(Variable));
     VERIFICATION(data->vars == nullptr, "data->vars calloc failed!", logfile, nullptr;);
 
 
@@ -67,6 +68,7 @@ RD_output* GetG(const char* str, FILE* logfile){
     if(data->s[data->p] == '\0'){
         output->vars_count = data->vars_count;
         output->node = node;
+        output->vars = data->vars;
         return output;
     }
 
@@ -188,8 +190,15 @@ Node* GetP(RD_data *data, FILE* logfile){
     if(data->s[data->p] == 'x'){
         fprintf(logfile, "Variable case.\n");
         node = OpNew(VAR, 0, logfile);
+        data->vars[data->vars_count].node_p = node;
         data->p++;
-        if(!is_known_var()){
+        if(!is_known_var(data, "x", logfile)){          // must be replaced with current var name
+            data->vars[data->vars_count].name = (char*)calloc(MAX_VAR_NAME_LENGTH, sizeof(char));
+            VERIFICATION(data->vars[data->vars_count].name == nullptr, "data->vars[data->vars_count] calloc failed!", logfile, nullptr);
+
+            data->vars[data->vars_count].name = strcpy(data->vars[data->vars_count].name, "x");
+            printf("allocated: %p == %s\n", data->vars[data->vars_count].name, data->vars[data->vars_count].name);
+
             data->vars_count++;
         }
         return node;
@@ -267,4 +276,16 @@ Node* syntax_error(RD_data *data, FILE* logfile){
     exit(-1);       // ?..
 
     return nullptr;
+}
+
+bool is_known_var(RD_data *data, const char* target_name, FILE* logfile){
+    VERIFICATION_LOGFILE(logfile, false);
+
+    for(unsigned int i = 0; i < data->vars_count; i++){
+        if(!strcmp(data->vars[i].name, target_name)){
+            return true;
+        }
+    }
+
+    return false;
 }

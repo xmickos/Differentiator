@@ -203,7 +203,12 @@ double OpEval(const Root* root, FILE* logfile){
     VERIFICATION(root == nullptr, "Input root is nullptr!\n", logfile, -1);
 
     if(root->vars_count > 0){
-        printf("Your graph has %d variables. Please enter their values one-by-one:\n", root->vars_count);
+        printf("Your graph has %d variable(s). Please enter their values one-by-one:\n", root->vars_count);
+
+        fprintf(logfile, "[%s, %d] Curr vars:\n", __FUNCTION__, __LINE__);
+        for(unsigned int i = 0; i < root->vars_count; i++){
+            fprintf(logfile, "%s\n", root->vars[i].name);
+        }
 
         for(unsigned int i = 0; i < root->vars_count; i++){
             printf("%s = ", root->vars[i].name);
@@ -211,6 +216,7 @@ double OpEval(const Root* root, FILE* logfile){
                 i--;
             }
             printf("\n");
+            root->vars[i].node_p->data.value = root->vars[i].value;
         }
     }
 
@@ -249,6 +255,36 @@ double OpPartialEval(const Node* node, FILE* logfile){
         }
     }else{
         return node->data.value;
+    }
+
+    switch(node->data_flag){
+        case VALUE:
+            fprintf(logfile, "[%s, %d] Curr node: data.type = %d == %c, data.value = %f\n", __FUNCTION__, __LINE__, node->data.type, node->data.type, node->data.value);
+
+            switch(node->data.type){
+                case SUMM:
+                    return OpPartialEval(node->left, logfile) + OpPartialEval(node->right, logfile);
+                case SUBTRACTION:
+                    return OpPartialEval(node->left, logfile) - OpPartialEval(node->right, logfile);
+                case MULTIPLICATION:
+                    return OpPartialEval(node->left, logfile) * OpPartialEval(node->right, logfile);
+                case DIVISION:
+                    tmp = OpPartialEval(node->right, logfile);
+                    VERIFICATION(IsEqual(tmp, 0), "Division by zero!", logfile, -1);
+                    return OpPartialEval(node->left, logfile) / tmp;
+                default:
+                    fprintf(logfile, "node.type is %d == %c\n", node->data.type, node->data.type);
+                    VERIFICATION(true, "Bad node type.", logfile, -1.);
+            }
+        break;
+        case OP:
+            return node->data.value;
+        break;
+        case VAR:
+            return node->data.value;
+        break;
+        default:
+            VERIFICATION(true, "Bad node data flag.", logfile, -1.);
     }
 
     return 0;
