@@ -234,31 +234,11 @@ double OpPartialEval(const Node* node, FILE* logfile){
 
     double tmp = 0.;
 
-    if(node->data_flag == OP){
-
-        fprintf(logfile, "[%s, %d] Curr node: data.type = %d == %c, data.value = %f\n", __FUNCTION__, __LINE__, node->data.type, node->data.type, node->data.value);
-
-        switch(node->data.type){
-            case SUMM:
-                return OpPartialEval(node->left, logfile) + OpPartialEval(node->right, logfile);
-            case SUBTRACTION:
-                return OpPartialEval(node->left, logfile) - OpPartialEval(node->right, logfile);
-            case MULTIPLICATION:
-                return OpPartialEval(node->left, logfile) * OpPartialEval(node->right, logfile);
-            case DIVISION:
-                tmp = OpPartialEval(node->right, logfile);
-                VERIFICATION(IsEqual(tmp, 0), "Division by zero!", logfile, -1);
-                return OpPartialEval(node->left, logfile) / tmp;
-            default:
-                fprintf(logfile, "node.type is %d == %c\n", node->data.type, node->data.type);
-                VERIFICATION(true, "Bad node type.", logfile, -1.);
-        }
-    }else{
-        return node->data.value;
-    }
-
     switch(node->data_flag){
         case VALUE:
+            return node->data.value;
+        break;
+        case OP:
             fprintf(logfile, "[%s, %d] Curr node: data.type = %d == %c, data.value = %f\n", __FUNCTION__, __LINE__, node->data.type, node->data.type, node->data.value);
 
             switch(node->data.type){
@@ -277,9 +257,6 @@ double OpPartialEval(const Node* node, FILE* logfile){
                     VERIFICATION(true, "Bad node type.", logfile, -1.);
             }
         break;
-        case OP:
-            return node->data.value;
-        break;
         case VAR:
             return node->data.value;
         break;
@@ -287,7 +264,7 @@ double OpPartialEval(const Node* node, FILE* logfile){
             VERIFICATION(true, "Bad node data flag.", logfile, -1.);
     }
 
-    return 0;
+    return 0.;
 }
 
 int OpTree2Text(const Root* root, FILE* outputfile, FILE* logfile){
