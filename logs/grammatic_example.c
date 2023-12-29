@@ -29,48 +29,51 @@
         (2+5)*(2-5)'\0'
         (((2000.00)-(1008.25))/((3.00)+(4.00)))
 
-VI  итерация: одна переменная 'x'
-    G ::= E'\0'
-    E ::= T{[+-]T}*
-    T ::= P{[*\]P}*
-    P ::= '('E')' | N | 'x'
-    N ::= ['0'-'9']+
+    VI  итерация: одна переменная 'x'
+        G ::= E'\0'
+        E ::= T{[+-]T}*
+        T ::= P{[*\]P}*
+        P ::= '('E')' | N | 'x'
+        N ::= ['0'-'9']+
 
 */
 
-Node* GetT(FILE* logfile){
+Node* GetE(RD_data *data, FILE* logfile){
     DEBUG_ECHO(logfile);
 
-    DEBUG_CALL(GetP, logfile);
-    Node *node_left = GetP(logfile);
-    Node* node = nullptr;
+    DEBUG_CALL(GetT, logfile);
+    Node *node_left = GetT(data, logfile);
+    Node *node = nullptr;
 
-    if(s[p] == MULTIPLICATION || s[p] == DIVISION){
+    if(data->s[data->p] == SUMM || data->s[data->p] == SUBTRACTION){
 
-        DEBUG_CALL(PartialGetT, logfile);
-        node = PartialGetT(logfile);
+        DEBUG_CALL(PartialGetE, logfile);
+        node = PartialGetE(data, logfile);
 
+        node->left = node_left;
+
+        return node;
+    }else{
+        return node_left;
     }
 
-    node->left = node_left;
-
-    return node;
 }
 
-Node* PartialGetT(FILE* logfile){
+Node* PartialGetE(RD_data *data, FILE* logfile){
     DEBUG_ECHO(logfile);
 
-    Node *subroot = OpNew(OP, s[p], logfile);
+    Node *subroot = OpNew(OP, data->s[data->p], logfile);
 
-    p++;
+    data->p++;
 
-    DEBUG_CALL(GetP, logfile);
-    Node *node_right = GetP(logfile);
+    DEBUG_CALL(GetT, logfile);
+    Node *node_right = GetT(data, logfile);
     Node *subsubroot = nullptr;
 
-    if(s[p] == MULTIPLICATION || s[p] == DIVISION){
+    if(data->s[data->p] == SUMM || data->s[data->p] == SUBTRACTION){
 
-        subsubroot = PartialGetT(logfile);
+        DEBUG_CALL(PartialGetE, logfile);
+        subsubroot = PartialGetE(data, logfile);
 
         subroot->right = subsubroot;
         subsubroot->left = node_right;

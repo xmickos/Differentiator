@@ -13,23 +13,17 @@ struct Lexema{
     char name[128] = {};
 };
 
-struct RD_output{
-    Node* node = nullptr;
-    Variable* vars = nullptr;
-    unsigned int vars_count = 0;
-};
-
 struct RD_data{
     int p = 0;
     const char* s = NULL;
-    unsigned int vars_count = 0;
-    Variable *vars = nullptr;
+    Vars_summary vars_info = {};
+    Node *node = nullptr;
 };
 
 
 Node* syntax_error(RD_data *data, FILE* logfile);
 
-RD_output* GetG(const char* str, FILE* logfile);
+Root* GetG(const char* str, FILE* logfile);
 
 Node* GetE(RD_data *data, FILE* logfile);
 
@@ -43,7 +37,7 @@ Node* PartialGetE(RD_data *data, FILE* logfile);
 
 Node* PartialGetT(RD_data *data, FILE* logfile);
 
-bool is_known_var(RD_data *data, const char* target_name, FILE* logfile);
+bool is_known_variable(Vars_summary *data, const char* target_name, FILE* logfile);
 
 inline double d_pow(double d, int k){
 

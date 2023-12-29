@@ -47,10 +47,16 @@ struct Variable{
     Node* node_p = nullptr;
 };
 
+struct Vars_summary{
+    Variable* vars = nullptr;
+    unsigned int vars_count = 0;
+};
+
 struct Root{
     Node* init_node = nullptr;
-    Variable *vars  = nullptr;
-    unsigned int vars_count = 0;
+    // Variable *vars  = nullptr;
+    // unsigned int vars_count = 0;
+    Vars_summary *vars_info = nullptr;
 };
 
 
@@ -109,3 +115,12 @@ int OpTree2Text(const Root* root, FILE* outputfile, FILE* logfile);
 
 int OpPartialTree2Text(const Node* node, FILE* outputfile, FILE* logfile);
 
+Node* OpPartialDerivative(Node *node, const char *target_var, FILE* logfile);
+
+Root* OpDerivative(Root* root, const char *target_var, FILE* logfile);
+
+Vars_summary* OpGraphVarsRefresh(const Root* root, FILE* logfile);
+
+int OpPartialGraphVarsRefresh(Node* node, Vars_summary* graph_refresh_output, FILE* logfile);
+
+inline int OpVarsFree(Root* root, FILE* logfile);

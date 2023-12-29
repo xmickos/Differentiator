@@ -46,7 +46,7 @@ VI  итерация: одна переменная 'x'
 */
 
 
-RD_output* GetG(const char* str, FILE* logfile){
+Root* GetG(const char* str, FILE* logfile){
     VERIFICATION_LOGFILE(logfile, nullptr);
 
     RD_data *data = nullptr;
@@ -54,21 +54,22 @@ RD_output* GetG(const char* str, FILE* logfile){
     data = (RD_data*)calloc(1, sizeof(RD_data));
     data->s = str;
     data->p = 0;
-    data->vars_count = 0;
-    data->vars = (Variable*)calloc(MAX_VARS_COUNT, sizeof(Variable));
-    VERIFICATION(data->vars == nullptr, "data->vars calloc failed!", logfile, nullptr;);
+    data->vars_info.vars_count = 0;
+    data->vars_info.vars = (Variable*)calloc(MAX_VARS_COUNT, sizeof(Variable));
+    VERIFICATION(data->vars_info.vars == nullptr, "data->vars calloc failed!", logfile, nullptr;);
 
 
-    RD_output *output = (RD_output*)calloc(1, sizeof(RD_output));
-    VERIFICATION(output == nullptr, "RD_output calloc failed!", logfile, nullptr;);
+    Root *output = (Root*)calloc(1, sizeof(Root));
+    VERIFICATION(output == nullptr, "Vars_summary calloc failed!", logfile, nullptr;);
 
     DEBUG_CALL(GetE, logfile);
     Node* node = GetE(data, logfile);
 
     if(data->s[data->p] == '\0'){
-        output->vars_count = data->vars_count;
-        output->node = node;
-        output->vars = data->vars;
+        // output->vars_info.vars_count = data->vars_info.vars_count;
+        output->init_node = node;
+        // output->vars_info.vars = data->vars_info.vars;
+        output->vars_info = OpGraphVarsRefresh(output, logfile);
         return output;
     }
 
@@ -157,6 +158,7 @@ Node* PartialGetT(RD_data *data, FILE* logfile){
 
     DEBUG_CALL(GetP, logfile);
     Node *node_right = GetP(data, logfile);
+    Node *subsubroot = nullptr;
 
     fprintf(logfile, "[%s, %d]: GetP returned %p\n", __FUNCTION__, __LINE__, node_right);
 
@@ -164,7 +166,6 @@ Node* PartialGetT(RD_data *data, FILE* logfile){
         fprintf(logfile, "I am %s, got node with val = %f from GetP\n", __FUNCTION__, node_right->data.value);
     }
 
-    Node *subsubroot = nullptr;
 
     if(data->s[data->p] == MULTIPLICATION || data->s[data->p] == DIVISION){
 
@@ -190,17 +191,21 @@ Node* GetP(RD_data *data, FILE* logfile){
     if(data->s[data->p] == 'x'){
         fprintf(logfile, "Variable case.\n");
         node = OpNew(VAR, 0, logfile);
-        data->vars[data->vars_count].node_p = node;
+        // data->vars_info.vars[data->vars_info.vars_count].node_p = node;
         data->p++;
-        if(!is_known_var(data, "x", logfile)){          // must be replaced with current var name
-            data->vars[data->vars_count].name = (char*)calloc(MAX_VAR_NAME_LENGTH, sizeof(char));
-            VERIFICATION(data->vars[data->vars_count].name == nullptr, "data->vars[data->vars_count] calloc failed!", logfile, nullptr);
+        // if(!is_known_variable(&(data->vars_info), "x", logfile)){          // must be replaced with current var name
+            // data->vars[data->vars_count].name = (char*)calloc(MAX_VAR_NAME_LENGTH, sizeof(char));
+            // data->vars_info.vars[data->vars_info.vars_count].name = (char*)calloc(MAX_VAR_NAME_LENGTH, sizeof(char));
+            // VERIFICATION(data->vars_info.vars[data->vars_info.vars_count].name == nullptr, "data->vars[data->vars_count] calloc failed!", logfile, nullptr);
 
-            data->vars[data->vars_count].name = strcpy(data->vars[data->vars_count].name, "x");
-            printf("allocated: %p == %s\n", data->vars[data->vars_count].name, data->vars[data->vars_count].name);
+            // data->vars[data->vars_count].name = strcpy(data->vars[data->vars_count].name, "x");
+            // data->vars_info.vars[data->vars_info.vars_count].name = strcpy(data->vars_info.vars[data->vars_info.vars_count].name, "x");
+            // printf("allocated: %p == %s\n", data->vars[data->vars_count].name, data->vars[data->vars_count].name);
+            // printf("allocated: %p == %s\n", data->vars_info.vars[data->vars_info.vars_count].name);
 
-            data->vars_count++;
-        }
+            // data->vars_count++;
+            // data->vars_info.vars_count++;
+        // }
         return node;
     }
 
@@ -278,11 +283,12 @@ Node* syntax_error(RD_data *data, FILE* logfile){
     return nullptr;
 }
 
-bool is_known_var(RD_data *data, const char* target_name, FILE* logfile){
+bool is_known_variable(Vars_summary *vars_info, const char* target_name, FILE* logfile){
     VERIFICATION_LOGFILE(logfile, false);
+    VERIFICATION(vars_info == nullptr, "vars_info input is nullptr!", logfile, false);
 
-    for(unsigned int i = 0; i < data->vars_count; i++){
-        if(!strcmp(data->vars[i].name, target_name)){
+    for(unsigned int i = 0; i < vars_info->vars_count; i++){
+        if(!strcmp(vars_info->vars[i].name, target_name)){
             return true;
         }
     }

@@ -8,10 +8,13 @@ int RootCtor(Root* root, FILE* logfile){
     root->init_node = (Node*)calloc(1, sizeof(Node));
     VERIFICATION(root->init_node == nullptr, "Calloc for root->init_node failed!", logfile, -1);
 
-    root->vars = (Variable*)calloc(MAX_VARS_COUNT, sizeof(Variable));
+    root->vars_info = (Vars_summary*)calloc(1, sizeof(Vars_summary));
+    VERIFICATION(root->vars_info == nullptr, "Calloc for root->vars_info failed!", logfile, -1);
+
+    root->vars_info->vars = (Variable*)calloc(MAX_VARS_COUNT, sizeof(Variable));
     VERIFICATION(root->init_node == nullptr, "Calloc for root->vars failed!", logfile, -1);
 
-    root->vars_count = 0;
+    root->vars_info->vars_count = 0;
 
     return 0;
 }
@@ -142,6 +145,8 @@ int OpPartialGraphDump(const Node* node, FILE* dotfile, unsigned char ip, unsign
         fprintf(dotfile, GRAPHVIZ_CONNECT_NODE("\"%d/%d\"", "\"%d/%d\""), ip, depth, new_ip, new_depth);
     }
 
+    // printf("Going down with left dataflag/value = %d/%d and right dataflag/value = %d/%d\n",
+    // node->left->data_flag, node->left->data.value, node->right->data_flag, node->right->data.value);
     OpPartialGraphDump(node->left, dotfile, ip, new_depth, logfile);
     OpPartialGraphDump(node->right, dotfile, new_ip, new_depth, logfile);
 
@@ -202,22 +207,27 @@ double OpEval(const Root* root, FILE* logfile){
     VERIFICATION_LOGFILE(logfile, -1);
     VERIFICATION(root == nullptr, "Input root is nullptr!\n", logfile, -1);
 
-    if(root->vars_count > 0){
-        printf("Your graph has %d variable(s). Please enter their values one-by-one:\n", root->vars_count);
+    if(root->vars_info->vars_count > 0){
+        printf("Your graph has %d variable(s). Please enter their values one-by-one:\n", root->vars_info->vars_count);
 
         fprintf(logfile, "[%s, %d] Curr vars:\n", __FUNCTION__, __LINE__);
-        for(unsigned int i = 0; i < root->vars_count; i++){
-            fprintf(logfile, "%s\n", root->vars[i].name);
+        for(unsigned int i = 0; i < root->vars_info->vars_count; i++){
+            fprintf(logfile, "%s <-> %p\n", root->vars_info->vars[i].name, root->vars_info->vars[i].node_p);
         }
 
-        for(unsigned int i = 0; i < root->vars_count; i++){
-            printf("%s = ", root->vars[i].name);
-            if( scanf("%lf", &(root->vars[i].value)) == 0){
+        for(unsigned int i = 0; i < root->vars_info->vars_count; i++){
+            printf("%s = ", root->vars_info->vars[i].name);
+            if( scanf("%lf", &(root->vars_info->vars[i].value)) == 0){
+                printf("Wrong value entered. Try again.\n");
+                while(!getchar());
                 i--;
+                continue;
             }
             printf("\n");
-            root->vars[i].node_p->data.value = root->vars[i].value;
+            root->vars_info->vars[i].node_p->data.value = root->vars_info->vars[i].value;
         }
+    }else{
+        printf("No variables found!\n");
     }
 
     return OpPartialEval(root->init_node, logfile);
@@ -239,7 +249,7 @@ double OpPartialEval(const Node* node, FILE* logfile){
             return node->data.value;
         break;
         case OP:
-            fprintf(logfile, "[%s, %d] Curr node: data.type = %d == %c, data.value = %f\n", __FUNCTION__, __LINE__, node->data.type, node->data.type, node->data.value);
+            // fprintf(logfile, "[%s, %d] Curr node: data.type = %d == %c, data.value = %f\n", __FUNCTION__, __LINE__, node->data.type, node->data.type, node->data.value);
 
             switch(node->data.type){
                 case SUMM:
@@ -309,6 +319,171 @@ int OpPartialTree2Text(const Node* node, FILE* outputfile, FILE* logfile){
     OpPartialTree2Text(node->right, logfile, logfile);
 
     if(node->data_flag == OP) fprintf(outputfile, ")");
+
+    return 0;
+}
+
+Root* OpDerivative(Root* root, const char *target_var, FILE* logfile){
+    VERIFICATION_LOGFILE(logfile, nullptr);
+
+    printf("\t\t[%s]:\n", __FUNCTION__);
+
+    printf("Self: %p, left: %p, right: %p, data_flag: %d, type: %d, value: %d\n",
+            root->init_node,
+            root->init_node->left,
+            root->init_node->right,
+            root->init_node->data_flag,
+            root->init_node->data.type,
+            root->init_node->data.value);
+    printf("Self: %p, left: %p, right: %p, data_flag: %d, type: %d, value: %d\n",
+            root->init_node->left,
+            root->init_node->left->left,
+            root->init_node->left->right,
+            root->init_node->left->data_flag,
+            root->init_node->left->data.type,
+            root->init_node->left->data.value);
+    printf("Self: %p, left: %p, right: %p, data_flag: %d, type: %d, value: %d\n\n",
+            root->init_node->right,
+            root->init_node->right->left,
+            root->init_node->right->right,
+            root->init_node->right->data_flag,
+            root->init_node->right->data.type,
+            root->init_node->right->data.value);
+
+    root->init_node = OpPartialDerivative(root->init_node, target_var, logfile);
+
+    // OpVarsFree(root, logfile);
+
+    // root->vars_info = OpGraphVarsRefresh(root, logfile);
+
+    return root;
+}
+
+Node* OpPartialDerivative(Node *node, const char *target_var, FILE* logfile){
+
+    Node *left_ = node->left;
+    Node *right_ = node->right;
+    Node *df = nullptr;
+    printf("\nself: %p, left_: %p, right_: %p, type: %d, data_flag: %d, data.value: %d\n",
+    node, left_, right_, node->data.type, node->data_flag, node->data.value);
+    if(node->right != nullptr) printf("right.data_flag = %d\n", node->right->data_flag);
+
+    switch(node->data_flag){
+        case VALUE:
+        printf("case VALUE\n");
+            return OpNew(VALUE, 0.0, logfile);
+        break;
+        case OP:
+            switch(node->data.type){
+                case SUMM:
+                printf("case SUMM\n");
+                    df = OpNew(OP, SUMM, logfile);
+                    df->left = OpPartialDerivative(left_, target_var, logfile);
+                    df->right = OpPartialDerivative(right_, target_var, logfile);
+                break;
+                case SUBTRACTION:
+                printf("case SUBTRACTION\n");
+                    df = OpNew(OP, SUBTRACTION, logfile);
+                    df->left = OpPartialDerivative(left_, target_var, logfile);
+                    df->right = OpPartialDerivative(right_, target_var, logfile);
+                break;
+                case MULTIPLICATION:
+                    df = OpNew(OP, SUMM, logfile);
+
+                    df->left = OpNew(OP, MULTIPLICATION, logfile);
+                    df->left->left = OpPartialDerivative(left_, target_var, logfile);
+                    df->left->right = right_;
+
+                    df->right = OpNew(OP, MULTIPLICATION, logfile);
+                    df->right->left = left_;
+                    df->right->right = OpPartialDerivative(right_, target_var, logfile);
+                break;
+                case DIVISION:
+                printf("case DIVISION\n");
+                    df = OpNew(OP, DIVISION, logfile);
+
+                    df->left = OpNew(OP, SUBTRACTION, logfile);
+
+                    df->left->left = OpNew(OP, MULTIPLICATION, logfile);
+                    df->left->left->left = OpPartialDerivative(left_, target_var, logfile);
+                    df->left->left->right = right_;
+
+                    df->left->right = OpNew(OP, MULTIPLICATION, logfile);
+                    df->left->right->left = left_;
+                    df->left->right->right = OpPartialDerivative(right_, target_var, logfile);
+
+                    df->right = OpNew(OP, MULTIPLICATION, logfile);
+                    df->right->left = right_;
+                    df->right->right = right_;
+                break;
+            }
+        break;
+        case VAR:
+        printf("case VAR\n");
+            return OpNew(VALUE, 1.0, logfile);
+        break;
+        default:
+            fprintf(logfile, "[%s, %d]: Wrong node data type.\nExiting...\n", __FUNCTION__, __LINE__);
+            return nullptr;
+    }
+
+    printf("returning df\n");
+    return df;
+}
+
+Vars_summary* OpGraphVarsRefresh(const Root* root, FILE* logfile){
+    VERIFICATION_LOGFILE(logfile, nullptr);
+
+    Vars_summary *graph_refresh_output = (Vars_summary*)calloc(1, sizeof(Vars_summary));
+    VERIFICATION(graph_refresh_output == nullptr, "failed to allocate memory for graph_refresh_output!", logfile, nullptr);
+
+    graph_refresh_output->vars = (Variable*)calloc(MAX_VARS_COUNT, sizeof(Variable));
+    VERIFICATION(graph_refresh_output->vars == nullptr, "failed to allocate memory for graph_refresh_output->vars!", logfile, nullptr);
+
+    graph_refresh_output->vars_count = 0;
+
+    OpPartialGraphVarsRefresh(root->init_node, graph_refresh_output, logfile);
+
+    return graph_refresh_output;
+}
+
+int OpPartialGraphVarsRefresh(Node* node, Vars_summary* output, FILE* logfile){
+
+    fprintf(logfile, "we need to go deeper!\n");
+
+    if(node == nullptr) return 0;
+
+    printf("curr node data_flag: %d, type: %c, value: %d, address = %p\n", node->data_flag, node->data.type, node->data.value, node);
+
+    if(node->data_flag == VALUE){
+        return 0;
+    }
+
+    if(node->data_flag == VAR && !is_known_variable(output, "x", logfile)){
+        output->vars[output->vars_count].name = (char*)calloc(MAX_VAR_NAME_LENGTH, sizeof(char));
+        VERIFICATION(output->vars[output->vars_count].name == nullptr, "var name allocation failed!", logfile, -1);
+
+        output->vars[output->vars_count].name = strcpy(output->vars[output->vars_count].name, "x");
+        output->vars_count++;
+        output->vars->node_p = node;
+        fprintf(logfile, "[%s, %d] Found! p = %p, name: %s\n", __FUNCTION__, __LINE__, node, output->vars[output->vars_count - 1].name);
+    } // fix for many units of one var
+
+    OpPartialGraphVarsRefresh(node->left, output, logfile);
+    OpPartialGraphVarsRefresh(node->right, output, logfile);
+
+    return 0;
+}
+
+inline int OpVarsFree(Root* root, FILE* logfile){
+    VERIFICATION_LOGFILE(logfile, -1);
+    VERIFICATION(root == nullptr, "Input root is nullptr!\n", logfile, -1);
+
+    for(unsigned int i = 0; i < root->vars_info->vars_count; i++){
+        free(root->vars_info->vars[i].name);
+    }
+
+    free(root->vars_info);
 
     return 0;
 }

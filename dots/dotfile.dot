@@ -10,7 +10,7 @@ node [
 edge [ ];
 
 "0/0"[
-	label = "-"
+	label = "+"
 	shape=circle
 ];
 
@@ -22,80 +22,122 @@ edge [ ];
 "0/0" -> "0/1"
 
 "128/1"[
-	label = "/"
+	label = "*"
 	shape=circle
 ];
 
 "0/0" -> "128/1"
 
 "0/2"[
-	label = "+"
-	shape=circle
+	label = "{<f0> 1.0000}"
+	shape=record
 ];
 
 "0/1" -> "0/2"
 
 "64/2"[
-	label = "+"
+	label = "/"
 	shape=circle
 ];
 
 "0/1" -> "64/2"
 
-"0/3"[
-	label = "{<f0> 0.5780}"
-	shape=record
-];
-
-"0/2" -> "0/3"
-
-"32/3"[
-	label = "{<f0> 0.1720}"
-	shape=record
-];
-
-"0/2" -> "32/3"
-
 "64/3"[
-	label = "{<f0> 0.8230}"
+	label = "{<f0> 2.0000}"
 	shape=record
 ];
 
 "64/2" -> "64/3"
 
 "96/3"[
-	label = "{<f0> 0.1170}"
+	label = "{<f0> 3.0000}"
 	shape=record
 ];
 
 "64/2" -> "96/3"
 
 "128/2"[
-	label = "{<f0> 1.7110}"
-	shape=record
+	label = "x"
+	shape=circle
 ];
 
 "128/1" -> "128/2"
 
 "192/2"[
-	label = "+"
+	label = "/"
 	shape=circle
 ];
 
 "128/1" -> "192/2"
 
 "192/3"[
-	label = "{<f0> 4.4180}"
-	shape=record
+	label = "-"
+	shape=circle
 ];
 
 "192/2" -> "192/3"
 
 "224/3"[
-	label = "x"
-	shape=diamond
+	label = "*"
+	shape=circle
 ];
 
 "192/2" -> "224/3"
+
+"192/4"[
+	label = "*"
+	shape=circle
+];
+
+"192/3" -> "192/4"
+
+"208/4"[
+	label = "*"
+	shape=circle
+];
+
+"192/3" -> "208/4"
+
+"192/5"[
+	label = "{<f0> 0.0000}"
+	shape=record
+];
+
+"192/4" -> "192/5"
+
+"200/5"[
+	label = "{<f0> 3.0000}"
+	shape=record
+];
+
+"192/4" -> "200/5"
+
+"208/5"[
+	label = "{<f0> 2.0000}"
+	shape=record
+];
+
+"208/4" -> "208/5"
+
+"216/5"[
+	label = "{<f0> 0.0000}"
+	shape=record
+];
+
+"208/4" -> "216/5"
+
+"224/4"[
+	label = "{<f0> 3.0000}"
+	shape=record
+];
+
+"224/3" -> "224/4"
+
+"240/4"[
+	label = "{<f0> 3.0000}"
+	shape=record
+];
+
+"224/3" -> "240/4"
 
 }
