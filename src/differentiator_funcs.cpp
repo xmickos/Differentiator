@@ -38,7 +38,6 @@ Node* OpNew(unsigned int data_flag, double value, FILE* logfile){
             break;
         case VAR:
             node->data_flag = VAR;
-            node->data.type = 0;
             node->data.value = 0;
             break;
         default:
@@ -325,6 +324,7 @@ int OpPartialTree2Text(const Node* node, FILE* outputfile, FILE* logfile){
 
 Root* OpDerivative(Root* root, const char *target_var, FILE* logfile){
     VERIFICATION_LOGFILE(logfile, nullptr);
+    VERIFICATION(root == nullptr, "Input root is nullptr!", logfile, nullptr);
 
     printf("\t\t[%s]:\n", __FUNCTION__);
 
@@ -352,9 +352,15 @@ Root* OpDerivative(Root* root, const char *target_var, FILE* logfile){
 
     root->init_node = OpPartialDerivative(root->init_node, target_var, logfile);
 
+    // printf("\t\t\t[OpVarsFree] & [OpGraphVarsRefresh]\n");
+
     // OpVarsFree(root, logfile);
 
     // root->vars_info = OpGraphVarsRefresh(root, logfile);
+
+    OpTextDump(root, logfile);
+
+    OpGraphSimplify(root, logfile);
 
     return root;
 }
@@ -431,7 +437,7 @@ Node* OpPartialDerivative(Node *node, const char *target_var, FILE* logfile){
     return df;
 }
 
-Vars_summary* OpGraphVarsRefresh(const Root* root, FILE* logfile){
+Vars_summary* OpGraphVarsRefresh(const Root* root, FILE* logfile){      // must be removed
     VERIFICATION_LOGFILE(logfile, nullptr);
 
     Vars_summary *graph_refresh_output = (Vars_summary*)calloc(1, sizeof(Vars_summary));
@@ -443,13 +449,17 @@ Vars_summary* OpGraphVarsRefresh(const Root* root, FILE* logfile){
     graph_refresh_output->vars_count = 0;
 
     OpPartialGraphVarsRefresh(root->init_node, graph_refresh_output, logfile);
+//
+//     char *p = (char*)root;
+//     const double x_samples[3] = {((double)p) % 0xf, (((double)p) / 0xf) % 0xff, (((double)p) % 0xff) % 0xfff};
+//     // const double y_samples[3] = {OpEval()}; // bad idea, unfortunately...
 
     return graph_refresh_output;
 }
 
-int OpPartialGraphVarsRefresh(Node* node, Vars_summary* output, FILE* logfile){
+int OpPartialGraphVarsRefresh(Node* node, Vars_summary* output, FILE* logfile){     // must be removed
 
-    fprintf(logfile, "we need to go deeper!\n");
+    fprintf(stdout, "we need to go deeper!\n");
 
     if(node == nullptr) return 0;
 
@@ -466,7 +476,7 @@ int OpPartialGraphVarsRefresh(Node* node, Vars_summary* output, FILE* logfile){
         output->vars[output->vars_count].name = strcpy(output->vars[output->vars_count].name, "x");
         output->vars_count++;
         output->vars->node_p = node;
-        fprintf(logfile, "[%s, %d] Found! p = %p, name: %s\n", __FUNCTION__, __LINE__, node, output->vars[output->vars_count - 1].name);
+        fprintf(stdout, "[%s, %d] Found! p = %p, name: %s\n", __FUNCTION__, __LINE__, node, output->vars[output->vars_count - 1].name);
     } // fix for many units of one var
 
     OpPartialGraphVarsRefresh(node->left, output, logfile);
@@ -475,7 +485,7 @@ int OpPartialGraphVarsRefresh(Node* node, Vars_summary* output, FILE* logfile){
     return 0;
 }
 
-inline int OpVarsFree(Root* root, FILE* logfile){
+inline int OpVarsFree(Root* root, FILE* logfile){           // must be removed
     VERIFICATION_LOGFILE(logfile, -1);
     VERIFICATION(root == nullptr, "Input root is nullptr!\n", logfile, -1);
 
@@ -483,7 +493,114 @@ inline int OpVarsFree(Root* root, FILE* logfile){
         free(root->vars_info->vars[i].name);
     }
 
+    root->vars_info->vars_count = 0;
+
     free(root->vars_info);
 
     return 0;
+}
+
+int OpGraphSimplify(Root* root, FILE* logfile){
+    VERIFICATION_LOGFILE(logfile, -1);
+    VERIFICATION(root == nullptr, "Input root is nullptr!", logfile, -1);
+
+    int i = 0;
+
+    do{
+        printf("iteration #%d\n", i);
+        i++;
+    }while(OpPartialGraphSimplify(root->init_node, logfile));
+
+}
+
+bool OpPartialGraphSimplify(Node *node, FILE* logfile){
+    bool ret_val = false;
+
+    if(node == nullptr || node->data_flag == VALUE) return false;
+
+    printf("---Node---\np: %p, l: %p, r: %p, data_flag: %d, type: %c, value: %d\n",
+            node,
+            node->left,
+            node->right,
+            node->data_flag,
+            node->data.type,
+            node->data.value
+    );
+
+    if(node->data_flag == OP){
+        printf("Entered with: p = %p, data_flag = %d, left = %p, right = %p, value = %f\n",
+                node,
+                node->data_flag,
+                node->left,
+                node->right,
+                node->data.value
+        );
+        printf("right data flag: %p\n", node->right->data_flag);
+        if(node->left->data_flag == VALUE && node->right->data_flag == VALUE){
+            ret_val = true;
+
+            switch(node->data.type){
+                case SUMM:
+                    node->data.value = node->left->data.value + node->right->data.value;
+                break;
+                case SUBTRACTION:
+                    node->data.value = node->left->data.value - node->right->data.value;
+                break;
+                case MULTIPLICATION:
+                    node->data.value = node->left->data.value * node->right->data.value;
+                break;
+                case DIVISION:
+                    if(!IsEqual(node->right->data.value, 0.)){
+                        node->data.value = node->left->data.value / node->right->data.value;
+                    }else{
+                        printf("[%s, %d]Error: Division by zero in graph. Exiting...\n", __FUNCTION__, __LINE__);
+                        return false;
+                    }
+                break;
+            }
+            free(node->left);
+            free(node->right);
+            node->left = nullptr;
+            node->right = nullptr;
+            node->data_flag = VALUE;
+
+        }else{
+            printf("Exiting with(1): p = %p, data_flag = %d, left = %p, right = %p, value = %f\n",
+                    node,
+                    node->data_flag,
+                    node->left,
+                    node->right,
+                    node->data.value
+                    );
+            printf("left: %p, l: %p, r: %p, data_flag: %d, l_df: %d, r_df: %d\n",
+                    node->left,
+                    node->left->left,
+                    node->left->right,
+                    node->left->data_flag,
+                    node->left->data_flag,
+                    node->right->data_flag
+                    );
+            bool val1, val2;
+            printf("Going left;\n");
+            printf("---Left---\np: %p, data_flag: %d, type: %c, value: %d\n",
+                node->left,
+                node->left->data_flag,
+                node->left->data.type,
+                node->left->data.value
+            );
+            val1 = OpPartialGraphSimplify(node->left, logfile);
+            printf("left returned %d\nGoing right:\n", val1);
+            val2 = OpPartialGraphSimplify(node->right, logfile);
+            printf("right returned: %d\n", val2);
+            return val1 || val2;
+        }
+    }else{
+        printf("Exiting with(2): p = %p, data_flag = %d, left = %p, right = %p, value = %f\n",
+                node, node->data_flag, node->left, node->right, node->data.value);
+        return false;
+    }
+
+    printf("Exiting with(3): p = %p, data_flag = %d, left = %p, right = %p, value = %f\n",
+            node, node->data_flag, node->left, node->right, node->data.value);
+    return ret_val;
 }

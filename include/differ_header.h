@@ -124,3 +124,7 @@ Vars_summary* OpGraphVarsRefresh(const Root* root, FILE* logfile);
 int OpPartialGraphVarsRefresh(Node* node, Vars_summary* graph_refresh_output, FILE* logfile);
 
 inline int OpVarsFree(Root* root, FILE* logfile);
+
+int OpGraphSimplify(Root* root, FILE* logfile);
+
+bool OpPartialGraphSimplify(Node *node, FILE* logfile);

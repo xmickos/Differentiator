@@ -32,10 +32,6 @@ int main(){
 
     Root *df_dx = OpDerivative(&root, "x", logfile);
 
-    OpGraphDump(df_dx, dotfile, logfile);
-    OpTextDump(df_dx, logfile);
-    printf("Answer for d (%s) / dx is %f\n", my_str, OpEval(df_dx, logfile));
-
     fclose(dotfile);
     fclose(logfile);
     return 0;
