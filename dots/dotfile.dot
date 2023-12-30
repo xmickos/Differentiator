@@ -1,0 +1,73 @@
+digraph g {
+fontname="Helvetica,Arial,sans-serif"
+node [fontname="Helvetica,Arial,sans-serif"]
+edge [fontname="Helvetica,Arial,sans-serif"]
+node [
+	fontsize = "16"
+	shape = "ellipse"
+];
+
+edge [ ];
+
+"0/0"[
+	label = "{<f0> / | <f1> 0x106801f30}"
+	shape=record
+];
+
+"0/1"[
+	label = "{<f0> - | <f1> 0x106801ea0}"
+	shape=record
+];
+
+"0/0" -> "0/1"
+
+"128/1"[
+	label = "{<f0> * | <f1> 0x106801d50}"
+	shape=record
+];
+
+"0/0" -> "128/1"
+
+"0/2"[
+	label = "{<f0> * | <f1> 0x106801e70}"
+	shape=record
+];
+
+"0/1" -> "0/2"
+
+"64/2"[
+	label = "{<f0> 1.0000 | <f1> 0x106801de0}"
+	shape=record
+];
+
+"0/1" -> "64/2"
+
+"0/3"[
+	label = "{<f0> 0.0000 | <f1> 0x106801e40}"
+	shape=record
+];
+
+"0/2" -> "0/3"
+
+"32/3"[
+	label = "x"
+	shape=diamond
+];
+
+"0/2" -> "32/3"
+
+"128/2"[
+	label = "{<f0> x | <f1> 0x106801d20}"
+	shape=record
+];
+
+"128/1" -> "128/2"
+
+"192/2"[
+	label = "x"
+	shape=diamond
+];
+
+"128/1" -> "192/2"
+
+}

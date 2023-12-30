@@ -62,15 +62,15 @@ int OpGraphDump(const Root* root, FILE* dotfile, FILE* logfile){
     switch(root->init_node->data_flag){
         case VALUE:
             fprintf(logfile, "[%s, %d] Value!\n", __FUNCTION__, __LINE__);
-            fprintf(dotfile, GRAPHVIZ_MKNODE_VALUE("0/0", "%f"), root->init_node->data.value);
+            fprintf(dotfile, GRAPHVIZ_MKNODE_VALUE("0/0", "%f"), root->init_node->data.value, root->init_node);
         break;
         case OP:
             fprintf(logfile, "[%s, %d] Op!\n", __FUNCTION__, __LINE__);
-            fprintf(dotfile, GRAPHVIZ_MKNODE_OP("0/0", "%c"), root->init_node->data.type);
+            fprintf(dotfile, GRAPHVIZ_MKNODE_OP("0/0", "%c"), root->init_node->data.type, root->init_node);
         break;
         case VAR:
             fprintf(logfile, "[%s, %d] Var!\n", __FUNCTION__, __LINE__);
-            fprintf(dotfile, GRAPHVIZ_MKNODE_OP("0/0", "x"));
+            fprintf(dotfile, GRAPHVIZ_MKNODE_OP("0/0", "x"), root->init_node);
         break;
         default:
             fprintf(logfile, "[%s, %d]: Wrong node data type.\nExiting...\n", __FUNCTION__, __LINE__);
@@ -98,17 +98,37 @@ int OpPartialGraphDump(const Node* node, FILE* dotfile, unsigned char ip, unsign
 
         switch(node->left->data_flag){
             case VALUE:
-                fprintf(logfile, "[%s, %d] Value! %.4f -> %d/%d, old ip & depth: %d/%d\n", __FUNCTION__, __LINE__,
-                node->left->data.value, new_ip, new_depth, ip, depth);
-                fprintf(dotfile, GRAPHVIZ_MKNODE_VALUE("%d/%d", "%.4f"), ip, new_depth, node->left->data.value);
+                fprintf(logfile, "[%s, %d] Value! %.4f -> %d/%d, old ip & depth: %d/%d\n",
+                    __FUNCTION__,
+                    __LINE__,
+                    node->left->data.value,
+                    new_ip, new_depth,
+                    ip,
+                    depth
+                );
+                fprintf(dotfile, GRAPHVIZ_MKNODE_VALUE("%d/%d", "%.4f"),
+                    ip,
+                    new_depth,
+                    node->left->data.value,
+                    node->left
+                );
             break;
             case OP:
                 fprintf(logfile, "[%s, %d] Op!\n", __FUNCTION__, __LINE__);
-                fprintf(dotfile, GRAPHVIZ_MKNODE_OP("%d/%d", "%c"), ip, new_depth, node->left->data.type);
+                fprintf(dotfile, GRAPHVIZ_MKNODE_OP("%d/%d", "%c"),
+                    ip,
+                    new_depth,
+                    node->left->data.type,
+                    node->left
+                );
             break;
             case VAR:
                 fprintf(logfile, "[%s, %d] Var!\n", __FUNCTION__, __LINE__);
-                fprintf(dotfile, GRAPHVIZ_MKNODE_OP("%d/%d", "x"), ip, new_depth);
+                fprintf(dotfile, GRAPHVIZ_MKNODE_OP("%d/%d", "x"),
+                    ip,
+                    new_depth,
+                    node->left
+                );
             break;
             default:
                 fprintf(logfile, "[%s, %d]: Wrong node data type.\nExiting...\n", __FUNCTION__, __LINE__);
@@ -126,15 +146,29 @@ int OpPartialGraphDump(const Node* node, FILE* dotfile, unsigned char ip, unsign
         switch(node->right->data_flag){
             case VALUE:
                 fprintf(logfile, "[%s, %d] Value!\n", __FUNCTION__, __LINE__);
-                fprintf(dotfile, GRAPHVIZ_MKNODE_VALUE("%d/%d", "%.4f"), new_ip, new_depth, node->right->data.value);
+                fprintf(dotfile, GRAPHVIZ_MKNODE_VALUE("%d/%d", "%.4f"),
+                    new_ip,
+                    new_depth,
+                    node->right->data.value,
+                    node->right
+                );
             break;
             case OP:
                 fprintf(logfile, "[%s, %d] Op!\n", __FUNCTION__, __LINE__);
-                fprintf(dotfile, GRAPHVIZ_MKNODE_OP("%d/%d", "%c"), new_ip, new_depth, node->right->data.type);
+                fprintf(dotfile, GRAPHVIZ_MKNODE_OP("%d/%d", "%c"),
+                    new_ip,
+                    new_depth,
+                    node->right->data.type,
+                    node->right
+                );
             break;
             case VAR:
                 fprintf(logfile, "[%s, %d] Var!\n", __FUNCTION__, __LINE__);
-                fprintf(dotfile, GRAPHVIZ_MKNODE_VAR("%d/%d", "x"), new_ip, new_depth);
+                fprintf(dotfile, GRAPHVIZ_MKNODE_VAR("%d/%d", "x"),
+                    new_ip,
+                    new_depth,
+                    node->right
+                );
             break;
             default:
                 fprintf(logfile, "[%s, %d]: Wrong node data type.\nExiting...\n", __FUNCTION__, __LINE__);
@@ -173,10 +207,10 @@ int OpPartialTextDump(const Node* node, size_t indent, FILE* logfile){
 
     switch(node->data_flag){
         case VALUE:
-            fprintf(logfile, "%f\n", node->data.value);
+            fprintf(logfile, "%f <-> %p\n", node->data.value, node);
         break;
         case OP:
-            fprintf(logfile, "%c\n", node->data.type);
+            fprintf(logfile, "%c <-> %p\n", node->data.type, node);
         break;
         case VAR:
             fprintf(logfile, "x\n");
@@ -326,31 +360,33 @@ Root* OpDerivative(Root* root, const char *target_var, FILE* logfile){
     VERIFICATION_LOGFILE(logfile, nullptr);
     VERIFICATION(root == nullptr, "Input root is nullptr!", logfile, nullptr);
 
+    root->init_node = OpPartialDerivative(root->init_node, target_var, logfile);
+
+    FILE* dotfile = fopen("./dots/dotfile.dot", "w");
+
     printf("\t\t[%s]:\n", __FUNCTION__);
 
-    printf("Self: %p, left: %p, right: %p, data_flag: %d, type: %d, value: %d\n",
+    printf("Self: %p, left: %p, right: %p, data_flag: %d, type: %c, value: %f\n",
             root->init_node,
             root->init_node->left,
             root->init_node->right,
             root->init_node->data_flag,
             root->init_node->data.type,
             root->init_node->data.value);
-    printf("Self: %p, left: %p, right: %p, data_flag: %d, type: %d, value: %d\n",
+    printf("Self: %p, left: %p, right: %p, data_flag: %d, type: %c, value: %f\n",
             root->init_node->left,
             root->init_node->left->left,
             root->init_node->left->right,
             root->init_node->left->data_flag,
             root->init_node->left->data.type,
             root->init_node->left->data.value);
-    printf("Self: %p, left: %p, right: %p, data_flag: %d, type: %d, value: %d\n\n",
+    printf("Self: %p, left: %p, right: %p, data_flag: %d, type: %c, value: %f\n\n",
             root->init_node->right,
             root->init_node->right->left,
             root->init_node->right->right,
             root->init_node->right->data_flag,
             root->init_node->right->data.type,
             root->init_node->right->data.value);
-
-    root->init_node = OpPartialDerivative(root->init_node, target_var, logfile);
 
     // printf("\t\t\t[OpVarsFree] & [OpGraphVarsRefresh]\n");
 
@@ -362,6 +398,10 @@ Root* OpDerivative(Root* root, const char *target_var, FILE* logfile){
 
     OpGraphSimplify(root, logfile);
 
+    OpGraphDump(root, dotfile, logfile);
+
+    fclose(dotfile);
+
     return root;
 }
 
@@ -369,9 +409,21 @@ Node* OpPartialDerivative(Node *node, const char *target_var, FILE* logfile){
 
     Node *left_ = node->left;
     Node *right_ = node->right;
-    Node *df = nullptr;
-    printf("\nself: %p, left_: %p, right_: %p, type: %d, data_flag: %d, data.value: %d\n",
-    node, left_, right_, node->data.type, node->data_flag, node->data.value);
+    Node *df_summ, *df_sub, *df_mul, *df_div, *left_copy, *right_copy;
+    df_summ = nullptr;
+    df_sub = nullptr;
+    df_mul = nullptr;
+    df_div = nullptr;
+    left_copy = nullptr;
+    right_copy = nullptr;
+    printf("\nself: %p, left_: %p, right_: %p, type: %d, data_flag: %d, data.value: %f\n",
+        node,
+        left_,
+        right_,
+        node->data.type,
+        node->data_flag,
+        node->data.value
+    );
     if(node->right != nullptr) printf("right.data_flag = %d\n", node->right->data_flag);
 
     switch(node->data_flag){
@@ -383,46 +435,68 @@ Node* OpPartialDerivative(Node *node, const char *target_var, FILE* logfile){
             switch(node->data.type){
                 case SUMM:
                 printf("case SUMM\n");
-                    df = OpNew(OP, SUMM, logfile);
-                    df->left = OpPartialDerivative(left_, target_var, logfile);
-                    df->right = OpPartialDerivative(right_, target_var, logfile);
+                    df_summ = OpNew(OP, SUMM, logfile);
+                    df_summ->left = OpPartialDerivative(left_, target_var, logfile);
+                    df_summ->right = OpPartialDerivative(right_, target_var, logfile);
+
+                    return df_summ;
                 break;
                 case SUBTRACTION:
                 printf("case SUBTRACTION\n");
-                    df = OpNew(OP, SUBTRACTION, logfile);
-                    df->left = OpPartialDerivative(left_, target_var, logfile);
-                    df->right = OpPartialDerivative(right_, target_var, logfile);
+                    df_sub = OpNew(OP, SUBTRACTION, logfile);
+                    df_sub->left = OpPartialDerivative(left_, target_var, logfile);
+                    df_sub->right = OpPartialDerivative(right_, target_var, logfile);
+
+                    return df_sub;
                 break;
                 case MULTIPLICATION:
-                    df = OpNew(OP, SUMM, logfile);
+                    df_mul = OpNew(OP, SUMM, logfile);
+                    left_copy = OpNodeCopy(left_, logfile);
+                    right_copy = OpNodeCopy(right_, logfile);
 
-                    df->left = OpNew(OP, MULTIPLICATION, logfile);
-                    df->left->left = OpPartialDerivative(left_, target_var, logfile);
-                    df->left->right = right_;
+                    df_mul->left = OpNew(OP, MULTIPLICATION, logfile);
+                    df_mul->left->left = OpPartialDerivative(left_copy, target_var, logfile);
+                    // fprintf(logfile, "left: %p, right: %p\n", left_, right_);
+                    df_mul->left->right = OpNodeCopy(right_copy, logfile);
+                    // fprintf(logfile, "\t\t\t\t\tTIME!\n");
 
-                    df->right = OpNew(OP, MULTIPLICATION, logfile);
-                    df->right->left = left_;
-                    df->right->right = OpPartialDerivative(right_, target_var, logfile);
+                    df_mul->right = OpNew(OP, MULTIPLICATION, logfile);
+                    df_mul->right->left = OpNodeCopy(left_copy, logfile);
+                    // fprintf(logfile, "\t\t\t\t\tTIME!\n");
+                    df_mul->right->right = OpPartialDerivative(right_copy, target_var, logfile);
+
+                    OpTreeFree(left_copy, logfile);
+                    OpTreeFree(right_copy, logfile);
+                    return df_mul;
                 break;
                 case DIVISION:
                 printf("case DIVISION\n");
-                    df = OpNew(OP, DIVISION, logfile);
+                    df_div = OpNew(OP, DIVISION, logfile);
+                    left_copy = OpNodeCopy(left_, logfile);
+                    right_copy = OpNodeCopy(right_, logfile);
 
-                    df->left = OpNew(OP, SUBTRACTION, logfile);
 
-                    df->left->left = OpNew(OP, MULTIPLICATION, logfile);
-                    df->left->left->left = OpPartialDerivative(left_, target_var, logfile);
-                    df->left->left->right = right_;
+                    df_div->left = OpNew(OP, SUBTRACTION, logfile);
 
-                    df->left->right = OpNew(OP, MULTIPLICATION, logfile);
-                    df->left->right->left = left_;
-                    df->left->right->right = OpPartialDerivative(right_, target_var, logfile);
+                    df_div->left->left = OpNew(OP, MULTIPLICATION, logfile);
+                    df_div->left->left->left = OpPartialDerivative(left_copy, target_var, logfile);
+                    df_div->left->left->right = OpNodeCopy(right_copy, logfile);
 
-                    df->right = OpNew(OP, MULTIPLICATION, logfile);
-                    df->right->left = right_;
-                    df->right->right = right_;
+                    df_div->left->right = OpNew(OP, MULTIPLICATION, logfile);
+                    df_div->left->right->left = OpNodeCopy(left_copy, logfile);
+                    df_div->left->right->right = OpPartialDerivative(right_copy, target_var, logfile);
+
+                    df_div->right = OpNew(OP, MULTIPLICATION, logfile);
+                    df_div->right->left = OpNodeCopy(right_, logfile);
+                    df_div->right->right = OpNodeCopy(right_, logfile);
+
+                    OpTreeFree(left_copy, logfile);
+                    OpTreeFree(right_copy, logfile);
+                    return df_div;
                 break;
             }
+            free(left_);
+            free(right_);
         break;
         case VAR:
         printf("case VAR\n");
@@ -433,8 +507,7 @@ Node* OpPartialDerivative(Node *node, const char *target_var, FILE* logfile){
             return nullptr;
     }
 
-    printf("returning df\n");
-    return df;
+    return nullptr;
 }
 
 Vars_summary* OpGraphVarsRefresh(const Root* root, FILE* logfile){      // must be removed
@@ -463,7 +536,12 @@ int OpPartialGraphVarsRefresh(Node* node, Vars_summary* output, FILE* logfile){ 
 
     if(node == nullptr) return 0;
 
-    printf("curr node data_flag: %d, type: %c, value: %d, address = %p\n", node->data_flag, node->data.type, node->data.value, node);
+    // printf("curr node data_flag: %d, type: %c, value: %f, address = %p\n",
+    //     node->data_flag,
+    //     node->data.type,
+    //     node->data.value,
+    //     node
+    // );
 
     if(node->data_flag == VALUE){
         return 0;
@@ -476,7 +554,7 @@ int OpPartialGraphVarsRefresh(Node* node, Vars_summary* output, FILE* logfile){ 
         output->vars[output->vars_count].name = strcpy(output->vars[output->vars_count].name, "x");
         output->vars_count++;
         output->vars->node_p = node;
-        fprintf(stdout, "[%s, %d] Found! p = %p, name: %s\n", __FUNCTION__, __LINE__, node, output->vars[output->vars_count - 1].name);
+        // fprintf(stdout, "[%s, %d] Found! p = %p, name: %s\n", __FUNCTION__, __LINE__, node, output->vars[output->vars_count - 1].name);
     } // fix for many units of one var
 
     OpPartialGraphVarsRefresh(node->left, output, logfile);
@@ -507,10 +585,12 @@ int OpGraphSimplify(Root* root, FILE* logfile){
     int i = 0;
 
     do{
-        printf("iteration #%d\n", i);
+        printf("\033[0;34miteration #%d\033[0m\n", i);
         i++;
     }while(OpPartialGraphSimplify(root->init_node, logfile));
 
+
+    return 0;
 }
 
 bool OpPartialGraphSimplify(Node *node, FILE* logfile){
@@ -518,7 +598,7 @@ bool OpPartialGraphSimplify(Node *node, FILE* logfile){
 
     if(node == nullptr || node->data_flag == VALUE) return false;
 
-    printf("---Node---\np: %p, l: %p, r: %p, data_flag: %d, type: %c, value: %d\n",
+    printf("---Node---\np: %p, l: %p, r: %p, data_flag: %d, type: %c, value: %f\n",
             node,
             node->left,
             node->right,
@@ -528,14 +608,18 @@ bool OpPartialGraphSimplify(Node *node, FILE* logfile){
     );
 
     if(node->data_flag == OP){
-        printf("Entered with: p = %p, data_flag = %d, left = %p, right = %p, value = %f\n",
+
+        printf("Entered with: p = %p, data_flag = %d, left = %p, right = %p, value = %f, type: %c, ",
                 node,
                 node->data_flag,
                 node->left,
                 node->right,
-                node->data.value
+                node->data.value,
+                node->data.type
         );
-        printf("right data flag: %p\n", node->right->data_flag);
+
+        printf("right data flag: %d\n", node->right->data_flag);
+
         if(node->left->data_flag == VALUE && node->right->data_flag == VALUE){
             ret_val = true;
 
@@ -558,7 +642,19 @@ bool OpPartialGraphSimplify(Node *node, FILE* logfile){
                     }
                 break;
             }
+            printf("\033[0;33m%d\033[0m    –   now left node \033[0;33m%p\033[0m with data_flag %d and value %f is free!\n",
+            __LINE__ + 4,
+            node->left,
+            node->left->data_flag,
+            node->left->data.value
+            );
             free(node->left);
+            printf("\033[0;31m%d\033[0m    –   now right node \033[0;31m%p\033[0m with data_flag %d and value %f is free!\n",
+            __LINE__ + 4,
+            node->right,
+            node->right->data_flag,
+            node->right->data.value
+            );
             free(node->right);
             node->left = nullptr;
             node->right = nullptr;
@@ -572,24 +668,21 @@ bool OpPartialGraphSimplify(Node *node, FILE* logfile){
                     node->right,
                     node->data.value
                     );
-            printf("left: %p, l: %p, r: %p, data_flag: %d, l_df: %d, r_df: %d\n",
-                    node->left,
-                    node->left->left,
-                    node->left->right,
-                    node->left->data_flag,
-                    node->left->data_flag,
-                    node->right->data_flag
-                    );
             bool val1, val2;
-            printf("Going left;\n");
-            printf("---Left---\np: %p, data_flag: %d, type: %c, value: %d\n",
+            printf("Going left into %p, data_flag: %d, type: %c, value: %f\n",
                 node->left,
                 node->left->data_flag,
                 node->left->data.type,
                 node->left->data.value
             );
             val1 = OpPartialGraphSimplify(node->left, logfile);
-            printf("left returned %d\nGoing right:\n", val1);
+            printf("left returned: %d\nGoing right:\n", val1);
+            printf("Going right into %p, data_flag: %d, type: %c, value: %f\n",
+                node->right,
+                node->right->data_flag,
+                node->right->data.type,
+                node->right->data.value
+            );
             val2 = OpPartialGraphSimplify(node->right, logfile);
             printf("right returned: %d\n", val2);
             return val1 || val2;
@@ -603,4 +696,49 @@ bool OpPartialGraphSimplify(Node *node, FILE* logfile){
     printf("Exiting with(3): p = %p, data_flag = %d, left = %p, right = %p, value = %f\n",
             node, node->data_flag, node->left, node->right, node->data.value);
     return ret_val;
+}
+
+inline Node* OpNodeCopy(const Node *node, FILE *logfile){
+    VERIFICATION_LOGFILE(logfile, nullptr);
+    VERIFICATION(node == nullptr, "Input node is nullptr!", logfile, nullptr);
+
+    Node* output = nullptr;
+
+    switch(node->data_flag){
+        case VALUE:
+            output = OpNew(node->data_flag, node->data.value, logfile);
+            break;
+        case OP:
+            output = OpNew(node->data_flag, node->data.type, logfile);
+            output->left = OpNodeCopy(node->left, logfile);
+            output->right = OpNodeCopy(node->right, logfile);
+            break;
+        case VAR:
+            output = OpNew(node->data_flag, node->data.type, logfile);
+            break;
+        default:
+            fprintf(logfile, "[%s, %d]: Wrong node data type.\nExiting...\n", __FUNCTION__, __LINE__);
+            return nullptr;
+    }
+
+    return output;
+}
+
+inline int OpTreeFree(Node *node, FILE* logfile){
+    VERIFICATION_LOGFILE(logfile, -1);
+
+    if(node == nullptr){
+        return 0;
+    }else{
+        if(node->left != nullptr){
+            OpTreeFree(node->left, logfile);
+        }
+        if(node->right != nullptr){
+            OpTreeFree(node->right, logfile);
+        }
+
+        free(node);
+    }
+
+    return 0;
 }

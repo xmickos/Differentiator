@@ -12,7 +12,7 @@ int main(){
     RETURN_CHECK(ret_val);
 
     // const char my_str[128] = "(0.578+0.172)*(0.823+0.117)-1.711/(4.418+x)";
-    const char my_str[128] = "x*2/3";
+    const char my_str[128] = "1/(x)";
     free(root.init_node);
 
     Root *rd_output = GetG(my_str, logfile);
@@ -30,7 +30,12 @@ int main(){
 
     // OpTree2Text(&root, stdout, logfile);        // fix
 
+    printf("\t\tsizeof(Node) = %zu, sizeof(Node*) = %zu, sizeof(NodeData) = %zu\n", sizeof(Node), sizeof(Node*), sizeof(NodeData));
+
     Root *df_dx = OpDerivative(&root, "x", logfile);
+
+    printf("Answer for d (%s) / dx is %f\n", my_str, OpEval(df_dx, logfile));
+
 
     fclose(dotfile);
     fclose(logfile);

@@ -35,10 +35,10 @@ enum types{
 };
 
 struct Node{
+    unsigned int data_flag : 2;
     Node* left = nullptr;
     Node* right = nullptr;
     NodeData data = {};
-    unsigned int data_flag : 2;
 };
 
 struct Variable{
@@ -79,9 +79,9 @@ edge [fontname=\"Helvetica,Arial,sans-serif\"]\n\
 node [\n\tfontsize = \"16\"\n\tshape = \"ellipse\"\n];\n\n\
 edge [ ];\n\n"
 
-#define GRAPHVIZ_MKNODE_VALUE(name, data) #name "[\n\tlabel = \"{<f0> " data "}\"\n\tshape=record\n];\n\n"
+#define GRAPHVIZ_MKNODE_VALUE(name, data) #name "[\n\tlabel = \"{<f0> " data " | <f1> %p}\"\n\tshape=record\n];\n\n"
 
-#define GRAPHVIZ_MKNODE_OP(name, data) #name "[\n\tlabel = \"" data "\"\n\tshape=circle\n];\n\n"
+#define GRAPHVIZ_MKNODE_OP(name, data) #name "[\n\tlabel = \"{<f0> " data " | <f1> %p}\"\n\tshape=record\n];\n\n"
 
 #define GRAPHVIZ_MKNODE_VAR(name, data) #name "[\n\tlabel = \"" data "\"\n\tshape=diamond\n];\n\n"
 
@@ -128,3 +128,7 @@ inline int OpVarsFree(Root* root, FILE* logfile);
 int OpGraphSimplify(Root* root, FILE* logfile);
 
 bool OpPartialGraphSimplify(Node *node, FILE* logfile);
+
+inline Node* OpNodeCopy(const Node *node, FILE *logfile);
+
+inline int OpTreeFree(Node *node, FILE* logfile);
