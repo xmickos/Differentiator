@@ -39,6 +39,7 @@ Node* OpNew(unsigned int data_flag, double value, FILE* logfile){
         case VAR:
             node->data_flag = VAR;
             node->data.value = 0;
+            node->data.name = (char*)calloc(MAX_VAR_NAME_LENGTH, sizeof(char));
             break;
         default:
             fprintf(logfile, "[%s, %d] Bad %s call. Nullptr returned.\n", __FUNCTION__, __LINE__, __FUNCTION__);
@@ -66,11 +67,11 @@ int OpGraphDump(const Root* root, FILE* dotfile, FILE* logfile){
         break;
         case OP:
             fprintf(logfile, "[%s, %d] Op!\n", __FUNCTION__, __LINE__);
-            fprintf(dotfile, GRAPHVIZ_MKNODE_OP("0/0", "%c"), root->init_node->data.type, root->init_node);
+            fprintf(dotfile, GRAPHVIZ_MKNODE_OP("0/0", "%c"), root->init_node->data.type, root->init_node, nullptr, 0.0);
         break;
         case VAR:
             fprintf(logfile, "[%s, %d] Var!\n", __FUNCTION__, __LINE__);
-            fprintf(dotfile, GRAPHVIZ_MKNODE_OP("0/0", "x"), root->init_node);
+            fprintf(dotfile, GRAPHVIZ_MKNODE_OP("0/0", "x"), root->init_node, root->init_node->data.name, root->init_node->data.value);
         break;
         default:
             fprintf(logfile, "[%s, %d]: Wrong node data type.\nExiting...\n", __FUNCTION__, __LINE__);
@@ -119,7 +120,9 @@ int OpPartialGraphDump(const Node* node, FILE* dotfile, unsigned char ip, unsign
                     ip,
                     new_depth,
                     node->left->data.type,
-                    node->left
+                    node->left,
+                    nullptr,
+                    0.0
                 );
             break;
             case VAR:
@@ -127,7 +130,9 @@ int OpPartialGraphDump(const Node* node, FILE* dotfile, unsigned char ip, unsign
                 fprintf(dotfile, GRAPHVIZ_MKNODE_OP("%d/%d", "x"),
                     ip,
                     new_depth,
-                    node->left
+                    node->left,
+                    node->left->data.name,
+                    node->left->data.value
                 );
             break;
             default:
@@ -159,15 +164,19 @@ int OpPartialGraphDump(const Node* node, FILE* dotfile, unsigned char ip, unsign
                     new_ip,
                     new_depth,
                     node->right->data.type,
-                    node->right
+                    node->right,
+                    nullptr,
+                    0.0
                 );
             break;
             case VAR:
                 fprintf(logfile, "[%s, %d] Var!\n", __FUNCTION__, __LINE__);
-                fprintf(dotfile, GRAPHVIZ_MKNODE_VAR("%d/%d", "x"),
+                fprintf(dotfile, GRAPHVIZ_MKNODE_OP("%d/%d", "x"),
                     new_ip,
                     new_depth,
-                    node->right
+                    node->right,
+                    node->right->data.name,
+                    node->right->data.value
                 );
             break;
             default:
@@ -240,27 +249,43 @@ double OpEval(const Root* root, FILE* logfile){
     VERIFICATION_LOGFILE(logfile, -1);
     VERIFICATION(root == nullptr, "Input root is nullptr!\n", logfile, -1);
 
+    Vars_summary * const &varinf = root->vars_info;
+
     if(root->vars_info->vars_count > 0){
-        printf("Your graph has %d variable(s). Please enter their values one-by-one:\n", root->vars_info->vars_count);
+        printf("Your graph has %d variable(s). Please enter their values one-by-one:\n", varinf->vars_count);
 
         fprintf(logfile, "[%s, %d] Curr vars:\n", __FUNCTION__, __LINE__);
-        for(unsigned int i = 0; i < root->vars_info->vars_count; i++){
-            fprintf(logfile, "%s <-> %p\n", root->vars_info->vars[i].name, root->vars_info->vars[i].node_p);
+        for(unsigned int i = 0; i < varinf->vars_count; i++){
+            fprintf(logfile, "%s <-> %p\n", varinf->vars[i].name, varinf->vars[i].node_p);
         }
 
-        for(unsigned int i = 0; i < root->vars_info->vars_count; i++){
-            printf("%s = ", root->vars_info->vars[i].name);
-            if( scanf("%lf", &(root->vars_info->vars[i].value)) == 0){
+        for(unsigned int i = 0; i < varinf->vars_count; i++){
+            printf("%s = ", varinf->vars[i].name);
+            if( scanf("%lf", &(varinf->vars[i].value)) == 0){
                 printf("Wrong value entered. Try again.\n");
                 while(!getchar());
                 i--;
                 continue;
             }
             printf("\n");
-            root->vars_info->vars[i].node_p->data.value = root->vars_info->vars[i].value;
+            varinf->vars[i].node_p->data.value = varinf->vars[i].value;
+
         }
+        GraphVarAssign(root, logfile);
+
+        FILE* dotfile = fopen("./dots/dotfile.dot", "w");
+
+        OpGraphDump(root, dotfile, logfile);
+
+        fclose(dotfile);
+
     }else{
         printf("No variables found!\n");
+    }
+
+    printf("Written vars values:\n");
+    for(unsigned int i = 0; i < varinf->vars_count; i++){
+        printf("%s = %f\n", varinf->vars[i].name, varinf->vars[i].value);
     }
 
     return OpPartialEval(root->init_node, logfile);
@@ -282,7 +307,12 @@ double OpPartialEval(const Node* node, FILE* logfile){
             return node->data.value;
         break;
         case OP:
-            // fprintf(logfile, "[%s, %d] Curr node: data.type = %d == %c, data.value = %f\n", __FUNCTION__, __LINE__, node->data.type, node->data.type, node->data.value);
+            fprintf(logfile, "[%s, %d] Curr node: data.type = %d == %c, data.value = %f\n",
+            __FUNCTION__,
+            __LINE__,
+            node->data.type,
+            node->data.type,
+            node->data.value);
 
             switch(node->data.type){
                 case SUMM:
@@ -294,6 +324,7 @@ double OpPartialEval(const Node* node, FILE* logfile){
                 case DIVISION:
                     tmp = OpPartialEval(node->right, logfile);
                     VERIFICATION(IsEqual(tmp, 0), "Division by zero!", logfile, -1);
+                    printf("[OpEval] ")
                     return OpPartialEval(node->left, logfile) / tmp;
                 default:
                     fprintf(logfile, "node.type is %d == %c\n", node->data.type, node->data.type);
@@ -301,6 +332,11 @@ double OpPartialEval(const Node* node, FILE* logfile){
             }
         break;
         case VAR:
+            fprintf(logfile, "[%s, %d] Case VAR: returning %f for x\n",
+                __FUNCTION__,
+                __LINE__,
+                node->data.value
+            );
             return node->data.value;
         break;
         default:
@@ -362,31 +398,39 @@ Root* OpDerivative(Root* root, const char *target_var, FILE* logfile){
 
     root->init_node = OpPartialDerivative(root->init_node, target_var, logfile);
 
-    FILE* dotfile = fopen("./dots/dotfile.dot", "w");
+//     FILE* dotfile = fopen("./dots/dotfile.dot", "w");
+//
+//     OpGraphDump(root, dotfile, logfile);
+//
+//     fclose(dotfile);
 
     printf("\t\t[%s]:\n", __FUNCTION__);
 
+    Node *&init = root->init_node;
+    Node *&left = root->init_node->left;
+    Node *&right = root->init_node->right;
+
     printf("Self: %p, left: %p, right: %p, data_flag: %d, type: %c, value: %f\n",
-            root->init_node,
-            root->init_node->left,
-            root->init_node->right,
-            root->init_node->data_flag,
-            root->init_node->data.type,
-            root->init_node->data.value);
+            init,
+            init->left,
+            init->right,
+            init->data_flag,
+            init->data.type,
+            init->data.value);
     printf("Self: %p, left: %p, right: %p, data_flag: %d, type: %c, value: %f\n",
-            root->init_node->left,
-            root->init_node->left->left,
-            root->init_node->left->right,
-            root->init_node->left->data_flag,
-            root->init_node->left->data.type,
-            root->init_node->left->data.value);
+            left,
+            left->left,
+            left->right,
+            left->data_flag,
+            left->data.type,
+            left->data.value);
     printf("Self: %p, left: %p, right: %p, data_flag: %d, type: %c, value: %f\n\n",
-            root->init_node->right,
-            root->init_node->right->left,
-            root->init_node->right->right,
-            root->init_node->right->data_flag,
-            root->init_node->right->data.type,
-            root->init_node->right->data.value);
+            right,
+            right->left,
+            right->right,
+            right->data_flag,
+            right->data.type,
+            right->data.value);
 
     // printf("\t\t\t[OpVarsFree] & [OpGraphVarsRefresh]\n");
 
@@ -398,10 +442,6 @@ Root* OpDerivative(Root* root, const char *target_var, FILE* logfile){
 
     OpGraphSimplify(root, logfile);
 
-    OpGraphDump(root, dotfile, logfile);
-
-    fclose(dotfile);
-
     return root;
 }
 
@@ -410,12 +450,14 @@ Node* OpPartialDerivative(Node *node, const char *target_var, FILE* logfile){
     Node *left_ = node->left;
     Node *right_ = node->right;
     Node *df_summ, *df_sub, *df_mul, *df_div, *left_copy, *right_copy;
+
     df_summ = nullptr;
     df_sub = nullptr;
     df_mul = nullptr;
     df_div = nullptr;
     left_copy = nullptr;
     right_copy = nullptr;
+
     printf("\nself: %p, left_: %p, right_: %p, type: %d, data_flag: %d, data.value: %f\n",
         node,
         left_,
@@ -549,9 +591,12 @@ int OpPartialGraphVarsRefresh(Node* node, Vars_summary* output, FILE* logfile){ 
 
     if(node->data_flag == VAR && !is_known_variable(output, "x", logfile)){
         output->vars[output->vars_count].name = (char*)calloc(MAX_VAR_NAME_LENGTH, sizeof(char));
+        node->data.name = (char*)calloc(MAX_VAR_NAME_LENGTH, sizeof(char));
+        printf("\tassigned name %p for node %p\n", node->data.name, node);
         VERIFICATION(output->vars[output->vars_count].name == nullptr, "var name allocation failed!", logfile, -1);
 
         output->vars[output->vars_count].name = strcpy(output->vars[output->vars_count].name, "x");
+        node->data.name = strcpy(node->data.name, "x");
         output->vars_count++;
         output->vars->node_p = node;
         // fprintf(stdout, "[%s, %d] Found! p = %p, name: %s\n", __FUNCTION__, __LINE__, node, output->vars[output->vars_count - 1].name);
@@ -715,6 +760,7 @@ inline Node* OpNodeCopy(const Node *node, FILE *logfile){
             break;
         case VAR:
             output = OpNew(node->data_flag, node->data.type, logfile);
+            output->data.name = strcpy(output->data.name, node->data.name);
             break;
         default:
             fprintf(logfile, "[%s, %d]: Wrong node data type.\nExiting...\n", __FUNCTION__, __LINE__);
@@ -727,18 +773,51 @@ inline Node* OpNodeCopy(const Node *node, FILE *logfile){
 inline int OpTreeFree(Node *node, FILE* logfile){
     VERIFICATION_LOGFILE(logfile, -1);
 
-    if(node == nullptr){
-        return 0;
-    }else{
+    if(node != nullptr){
         if(node->left != nullptr){
             OpTreeFree(node->left, logfile);
         }
         if(node->right != nullptr){
             OpTreeFree(node->right, logfile);
         }
-
+        if(node->data_flag == VAR){
+            free(node->data.name);
+        }
         free(node);
     }
+
+    return 0;
+}
+
+int GraphVarAssign(const Root *root, FILE *logfile){
+    VERIFICATION_LOGFILE(logfile, -1);
+    VERIFICATION(root == nullptr, "Input root is nullptr!", logfile, -1);
+
+    for(unsigned int i = 0; i < root->vars_info->vars_count; i++){
+        printf("[%s, %d] Working for %s\n", __FUNCTION__, __LINE__, root->vars_info->vars[i].name);
+        PartialGraphVarAssign(root->init_node, root->vars_info->vars[i].name, root->vars_info->vars[i].value, logfile);
+    }
+
+    return 0;
+
+}
+
+int PartialGraphVarAssign(Node *node, const char *name, const double value, FILE* logfile){
+
+    if(node->data_flag == VAR){
+        printf("[%s, %d] %p <-> name: %s\n", __FUNCTION__, __LINE__, node, node->data.name);
+        if(!strcmp(node->data.name, name)){
+            printf("find! %p\n", node);
+            node->data.value = value;
+        }
+        return 0;
+    }
+
+    if(node->data_flag == OP){
+        PartialGraphVarAssign(node->left, name, value, logfile);
+        PartialGraphVarAssign(node->right, name, value, logfile);
+    }
+
 
     return 0;
 }

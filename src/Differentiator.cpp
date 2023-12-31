@@ -12,7 +12,7 @@ int main(){
     RETURN_CHECK(ret_val);
 
     // const char my_str[128] = "(0.578+0.172)*(0.823+0.117)-1.711/(4.418+x)";
-    const char my_str[128] = "1/(x)";
+    const char my_str[128] = "1/(x-5)";
     free(root.init_node);
 
     Root *rd_output = GetG(my_str, logfile);
@@ -21,12 +21,14 @@ int main(){
     root.vars_info->vars_count = rd_output->vars_info->vars_count;
     root.vars_info->vars = rd_output->vars_info->vars;
 
+    // printf("??? - %s\n", root.vars_info->vars[0].name);
+
     OpTextDump(&root, logfile);
 
     FILE* dotfile = fopen("./dots/dotfile.dot", "w");
     // OpGraphDump(&root, dotfile, logfile);
 
-    printf("Answer for %s is %f\n", my_str, OpEval(&root, logfile));
+    // printf("Answer for %s is %f\n", my_str, OpEval(&root, logfile));
 
     // OpTree2Text(&root, stdout, logfile);        // fix
 
