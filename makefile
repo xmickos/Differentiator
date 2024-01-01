@@ -1,7 +1,7 @@
 all: build
 	./Executables/Differentiator
 
-src_list = ./src/differentiator_funcs.cpp ./src/RD_funcs.cpp ./src/Differentiator.cpp
+src_list = ./src/differentiator_funcs.cpp ./src/RD_funcs.cpp ./src/Differentiator.cpp ./src/debug_funcs.cpp
 
 build:
 	g++ -D _DEBUG=1 -ggdb3 -std=c++17 -O0 -Wall -Wextra -Weffc++ -Wc++14-compat -Wmissing-declarations								\
