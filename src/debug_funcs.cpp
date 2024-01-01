@@ -65,11 +65,22 @@ int OpGraphDump(const Root* root, FILE* dotfile, FILE* logfile){
         break;
         case OP:
             fprintf(logfile, "[%s, %d] Op!\n", __FUNCTION__, __LINE__);
-            fprintf(dotfile, GRAPHVIZ_MKNODE_OP("0/0", "%c"), root->init_node->data.type, root->init_node, nullptr, 0.0);
+            fprintf(dotfile, GRAPHVIZ_MKNODE_OP("0/0", "%c"),
+            root->init_node->data.type,
+            root->init_node,
+            nullptr,
+            0.0,
+            "\0"
+            );
         break;
         case VAR:
             fprintf(logfile, "[%s, %d] Var!\n", __FUNCTION__, __LINE__);
-            fprintf(dotfile, GRAPHVIZ_MKNODE_OP("0/0", "x"), root->init_node, root->init_node->data.name, root->init_node->data.value);
+            fprintf(dotfile, GRAPHVIZ_MKNODE_OP("0/0", "x"),
+            root->init_node,
+            root->init_node->data.name,
+            root->init_node->data.value,
+            root->init_node->data.name
+            );
         break;
         default:
             fprintf(logfile, "[%s, %d]: Wrong node data type.\nExiting...\n", __FUNCTION__, __LINE__);
@@ -120,7 +131,8 @@ int OpPartialGraphDump(const Node* node, FILE* dotfile, unsigned char ip, unsign
                     node->left->data.type,
                     node->left,
                     nullptr,
-                    0.0
+                    0.0,
+                    "\0"
                 );
             break;
             case VAR:
@@ -130,7 +142,8 @@ int OpPartialGraphDump(const Node* node, FILE* dotfile, unsigned char ip, unsign
                     new_depth,
                     node->left,
                     node->left->data.name,
-                    node->left->data.value
+                    node->left->data.value,
+                    node->left->data.name
                 );
             break;
             default:
@@ -164,7 +177,8 @@ int OpPartialGraphDump(const Node* node, FILE* dotfile, unsigned char ip, unsign
                     node->right->data.type,
                     node->right,
                     nullptr,
-                    0.0
+                    0.0,
+                    "\0"
                 );
             break;
             case VAR:
@@ -174,7 +188,8 @@ int OpPartialGraphDump(const Node* node, FILE* dotfile, unsigned char ip, unsign
                     new_depth,
                     node->right,
                     node->right->data.name,
-                    node->right->data.value
+                    node->right->data.value,
+                    node->right->data.name
                 );
             break;
             default:

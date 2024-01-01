@@ -16,6 +16,7 @@
 
 #define MAX_VAR_NAME_LENGTH 128
 
+
 union NodeData{
     double value;
     char type;
@@ -82,7 +83,7 @@ edge [ ];\n\n"
 
 #define GRAPHVIZ_MKNODE_VALUE(name, data) #name "[\n\tlabel = \"{<f0> " data " | <f1> %p}\"\n\tshape=record\n];\n\n"
 
-#define GRAPHVIZ_MKNODE_OP(name, data) #name "[\n\tlabel = \"{<f0> " data " | <f1> %p | <f2> name_p: %p | <f3> val: %f}\"\n\tshape=record\n];\n\n"
+#define GRAPHVIZ_MKNODE_OP(name, data) #name "[\n\tlabel = \"{<f0> " data " | <f1> %p | <f2> name_p: %p | <f3> val: %f | <f4> name: %s}\"\n\tshape=record\n];\n\n"
 
 #define GRAPHVIZ_MKNODE_VAR(name, data) #name "[\n\tlabel = \"" data "\"\n\tshape=diamond\n];\n\n"
 
