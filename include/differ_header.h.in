@@ -4,6 +4,9 @@
 #include <limits.h>
 #include <math.h>
 
+#define Differentiator_VERSION_MAJOR @Differentiator_VERSION_MAJOR@
+#define Differentiator_VERSION_MINOR @Differentiator_VERSION_MINOR@
+
 #define EPS 1e-2
 
 #define DEBUG
@@ -15,6 +18,8 @@
 #define MAX_VARS_COUNT 128
 
 #define MAX_VAR_NAME_LENGTH 128
+
+#define MAX_EXPRESSION_LENGTH 128
 
 
 union NodeData{
@@ -56,24 +61,23 @@ struct Vars_summary{
 
 struct Root{
     Node* init_node = nullptr;
-    // Variable *vars  = nullptr;
-    // unsigned int vars_count = 0;
     Vars_summary *vars_info = nullptr;
 };
 
 
 #define VERIFICATION_LOGFILE(logfile, retval) if(logfile == nullptr){ printf("\033[1;31mError\033[0m: logfile is nullptr!\nExiting...\n"); return retval;}
 
-#define ECHO(logfile) fprintf(logfile, "[%s, %d]\n", __FUNCTION__, __LINE__);                                          \
-    printf("[%s, %d]\n", __FUNCTION__, __LINE__);
+#ifdef DEBUG_
+    #define ECHO(logfile) fprintf(logfile, "[%s, %d]\n", __FUNCTION__, __LINE__);                                          \
+        printf("[%s, %d]\n", __FUNCTION__, __LINE__);
+#else
+    #define ECHO(logfile) {}
+#endif
 
 #define VERIFICATION(condition, message, logfile, ret_val)     if(condition){                                          \
         fprintf(logfile, "[%s, %d]Error:\t" message "\nExiting...\n", __FUNCTION__, __LINE__);                         \
         return ret_val;                                                                                                \
     }
-
-#define RETURN_CHECK(ret_val) do{ if(ret_val){ printf("\033[1;31mError\033[0m: bad return value: %d\n", ret_val); \
-        return ret_val; }}while(0)
 
 #define GRAPHVIZ_INIT "digraph g {\nfontname=\"Helvetica,Arial,sans-serif\"\n\
 node [fontname=\"Helvetica,Arial,sans-serif\"]\n\
@@ -91,7 +95,7 @@ edge [ ];\n\n"
 
 #define GRAPHVIZ_END "}\n"
 
-int RootCtor(Root* root, FILE* logfile);
+Root* RootCtor(FILE* logfile);
 
 Node* OpNew(unsigned int data_flag, double value, FILE* logfile);
 
